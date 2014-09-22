@@ -40,7 +40,7 @@ class BeanFinder(object):
         img = self._crop_cell(img, x, y)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        votes = get_color_votes(hsv)
+        votes = get_color_votes_fast(hsv)
 
         # It should be rare, but possible to get no similar colors
         if not votes:
@@ -99,3 +99,28 @@ def get_color_votes(hsv_img):
             votes[closest_color] += 1
 
     return votes
+
+import ctypes
+LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
+print LIBRARY_FILE
+libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
+libpuyo.get_color_votes.argtypes = [ctypes.POINTER(ctypes.c_char), # pixels
+                                    ctypes.c_int,                  # n_pixels
+                                    ctypes.POINTER(ctypes.c_int),  # strides
+                                    ctypes.POINTER(ctypes.c_int)]  # votes_out
+
+def get_color_votes_fast(hsv_img):
+    assert hsv_img.dtype == "uint8"
+    flat = hsv_img.reshape(hsv_img.shape[0]*hsv_img.shape[1], 3)
+
+    votes_type = ctypes.c_int * 6
+    votes = votes_type()
+    libpuyo.get_color_votes(
+        flat.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
+        flat.shape[0],
+        flat.ctypes.strides_as(ctypes.c_int),
+        votes
+    )
+
+    color_names = (b' ', b'r', b'g', b'b', b'y', b'p')
+    return {color_names[i]: votes[i] for i in range(6)}
