@@ -42,7 +42,7 @@ def _validate_board(board, width, height):
 
 class Puyo1Board(object):
 
-    def __init__(self, board=None):
+    def __init__(self, board=None, next_beans=None):
         if board is None:
             self._board = [[b' ' for y in range(12)]
                                  for x in range(6)]
@@ -50,26 +50,45 @@ class Puyo1Board(object):
             _validate_board(board, 6, 12)
             self._board = deepcopy(board)
 
+        self.next_beans = next_beans
+
     def copy(self):
-        return Puyo1Board(self._board)
+        return Puyo1Board(self._board, self.next_beans)
 
     def draw(self):
         """Return an image representing the puyo board."""
 
-        w = 6 * CELL_WIDTH
+        if self.next_beans:
+            w = 8 * CELL_WIDTH
+        else:
+            w = 6 * CELL_WIDTH
         h = 12 * CELL_HEIGHT
         img = numpy.zeros((h, w, 3), "uint8")
         img[:,:,:] = 255
+
+        def draw_square(x, y, color):
+            x_start = CELL_WIDTH * x
+            y_start = CELL_HEIGHT * (11 - y)
+            x_end = CELL_WIDTH * (x + 1)
+            y_end = CELL_HEIGHT * (12 - y)
+            img[y_start:y_end, x_start:x_end] = color
 
         for x in range(6):
             for y in range(12):
                 cell = self._board[x][y]
                 if cell != b' ':
-                    x_start = CELL_WIDTH*x
-                    y_start = CELL_HEIGHT*(11-y)
-                    x_end = CELL_WIDTH*(x+1)
-                    y_end = CELL_HEIGHT*(12-y)
-                    img[y_start:y_end, x_start:x_end] = CELL_COLORS[cell]
+                    draw_square(x, y, CELL_COLORS[cell])
+
+        if self.next_beans:
+            x_start = CELL_WIDTH * 6
+            y_start = 0
+            x_end = CELL_WIDTH * 8
+            y_end = CELL_HEIGHT * 12
+            img[y_start:y_end, x_start:x_end] = (127, 127, 127)
+
+            draw_square(7, 9, CELL_COLORS[self.next_beans[0]])
+            draw_square(7, 8, CELL_COLORS[self.next_beans[1]])
+
         return img
 
     def drop_beans(self, xs, colors):

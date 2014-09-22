@@ -7,9 +7,11 @@ import cv2
 
 from puyo import Puyo1Board
 
-PLAYER1_BOARD_OFFSET = (35, 35)
 CELL_SIZE = (32, 32)
 CELL_BORDER = 4
+
+PLAYER1_BOARD_OFFSET = (35, 35)
+PLAYER1_NEXT_BEAN_OFFSETS = ((258, 96), (258, 127))
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates/")
 BLACK_EYE_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "black_eye.png")
@@ -19,9 +21,15 @@ class BeanFinder(object):
 
     def __init__(self, screen_offset, player=1):
         if player == 1:
-            self.offset = (
+            self.board_offset = (
                 screen_offset[0] + PLAYER1_BOARD_OFFSET[0],
                 screen_offset[1] + PLAYER1_BOARD_OFFSET[1],
+            )
+            self.next_bean_offsets = (
+                (screen_offset[0] + PLAYER1_NEXT_BEAN_OFFSETS[0][0],
+                 screen_offset[1] + PLAYER1_NEXT_BEAN_OFFSETS[0][1]),
+                (screen_offset[0] + PLAYER1_NEXT_BEAN_OFFSETS[1][0],
+                 screen_offset[1] + PLAYER1_NEXT_BEAN_OFFSETS[1][1])
             )
         elif player == 2:
             raise NotImplementedError("Player2 hasn't been implemented )=")
@@ -34,10 +42,22 @@ class BeanFinder(object):
     def get_board(self, img):
         board = [[self._get_bean_at(img, x, y) for y in range(12)]
                                                for x in range(6)]
-        return Puyo1Board(board)
+        next_beans = self._get_next_beans(img)
+        return Puyo1Board(board, next_beans)
 
     def _get_bean_at(self, img, x, y):
-        img = self._crop_cell(img, x, y)
+        return self._detect_color(self._crop_cell(img, x, y))
+
+    def _get_next_beans(self, img):
+        next1 = self._crop_cell(img,
+                                *self.next_bean_offsets[0],
+                                image_coordinates=True)
+        next2 = self._crop_cell(img,
+                                *self.next_bean_offsets[1],
+                                image_coordinates=True)
+        return (self._detect_color(next1), self._detect_color(next2))
+
+    def _detect_color(self, img):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         votes = get_color_votes_fast(hsv)
@@ -62,11 +82,21 @@ class BeanFinder(object):
         else:
             return bean
 
-    def _crop_cell(self, img, x, y):
-        x_start = self.offset[0] + CELL_SIZE[0]*x + CELL_BORDER
-        y_start = self.offset[1] + CELL_SIZE[1]*(11-y) + CELL_BORDER
-        x_end = self.offset[0] + CELL_SIZE[0]*(x+1) - CELL_BORDER
-        y_end = self.offset[1] + CELL_SIZE[1]*(12-y) - CELL_BORDER
+    def _crop_cell(self, img, x, y, image_coordinates=False):
+        """
+        By default, (x, y) are treaed as board coordinates (so 0 <= x < 6 and
+        y <= y < 12, with (0, 0) being the lower left). If `image_coordinates`
+        is True, (x, y) is treated as pixel coordinates starting from the
+        upper left of the image.
+        """
+        if not image_coordinates:
+            x = self.board_offset[0] + x * CELL_SIZE[0]
+            y = self.board_offset[1] + (11-y) * CELL_SIZE[1]
+            offset = self.board_offset
+        x_start = x + CELL_BORDER
+        y_start = y + CELL_BORDER
+        x_end   = x - CELL_BORDER + CELL_SIZE[0]
+        y_end   = y - CELL_BORDER + CELL_SIZE[1]
         return img[y_start:y_end, x_start:x_end]
 
 def color_dist(c1, c2):
