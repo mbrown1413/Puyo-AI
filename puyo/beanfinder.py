@@ -64,9 +64,9 @@ class BeanFinder(object):
 
     def _crop_cell(self, img, x, y):
         x_start = self.offset[0] + CELL_SIZE[0]*x + CELL_BORDER
-        y_start = self.offset[1] + CELL_SIZE[1]*y + CELL_BORDER
+        y_start = self.offset[1] + CELL_SIZE[1]*(11-y) + CELL_BORDER
         x_end = self.offset[0] + CELL_SIZE[0]*(x+1) - CELL_BORDER
-        y_end = self.offset[1] + CELL_SIZE[1]*(y+1) - CELL_BORDER
+        y_end = self.offset[1] + CELL_SIZE[1]*(12-y) - CELL_BORDER
         return img[y_start:y_end, x_start:x_end]
 
 def color_dist(c1, c2):
