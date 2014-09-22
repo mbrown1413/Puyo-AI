@@ -102,7 +102,6 @@ def get_color_votes(hsv_img):
 
 import ctypes
 LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
-print LIBRARY_FILE
 libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
 libpuyo.get_color_votes.argtypes = [ctypes.POINTER(ctypes.c_char), # pixels
                                     ctypes.c_int,                  # n_pixels
