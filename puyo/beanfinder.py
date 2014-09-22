@@ -24,7 +24,7 @@ class BeanFinder(object):
                 screen_offset[1] + PLAYER1_BOARD_OFFSET[1],
             )
         elif player == 2:
-            raise NotImplementedError()
+            raise NotImplementedError("Player2 hasn't been implemented )=")
         else:
             raise ValueError('Invalid player: "{}", '
                               'must be either 1 or 2.'.format(player))
