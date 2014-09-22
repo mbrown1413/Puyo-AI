@@ -3,9 +3,7 @@ from copy import deepcopy
 
 import numpy
 
-# Pixel dimensions of each cell when drawing
-CELL_WIDTH = 32
-CELL_HEIGHT = 32
+CELL_DRAW_SIZE = (32, 32)
 
 VALID_CELLS = (
     b' ',  # Nothing
@@ -44,46 +42,46 @@ class Puyo1Board(object):
 
     def __init__(self, board=None, next_beans=None):
         if board is None:
-            self._board = [[b' ' for y in range(12)]
+            self.board = [[b' ' for y in range(12)]
                                  for x in range(6)]
         else:
             _validate_board(board, 6, 12)
-            self._board = deepcopy(board)
+            self.board = deepcopy(board)
 
         self.next_beans = next_beans
 
     def copy(self):
-        return Puyo1Board(self._board, self.next_beans)
+        return Puyo1Board(self.board, self.next_beans)
 
     def draw(self):
         """Return an image representing the puyo board."""
 
         if self.next_beans:
-            w = 8 * CELL_WIDTH
+            w = 8 * CELL_DRAW_SIZE[0]
         else:
-            w = 6 * CELL_WIDTH
-        h = 12 * CELL_HEIGHT
+            w = 6 * CELL_DRAW_SIZE[0]
+        h = 12 * CELL_DRAW_SIZE[1]
         img = numpy.zeros((h, w, 3), "uint8")
         img[:,:,:] = 255
 
         def draw_square(x, y, color):
-            x_start = CELL_WIDTH * x
-            y_start = CELL_HEIGHT * (11 - y)
-            x_end = CELL_WIDTH * (x + 1)
-            y_end = CELL_HEIGHT * (12 - y)
+            x_start = CELL_DRAW_SIZE[0] * x
+            y_start = CELL_DRAW_SIZE[1] * (11 - y)
+            x_end = CELL_DRAW_SIZE[0] * (x + 1)
+            y_end = CELL_DRAW_SIZE[1] * (12 - y)
             img[y_start:y_end, x_start:x_end] = color
 
         for x in range(6):
             for y in range(12):
-                cell = self._board[x][y]
+                cell = self.board[x][y]
                 if cell != b' ':
                     draw_square(x, y, CELL_COLORS[cell])
 
         if self.next_beans:
-            x_start = CELL_WIDTH * 6
+            x_start = CELL_DRAW_SIZE[0] * 6
             y_start = 0
-            x_end = CELL_WIDTH * 8
-            y_end = CELL_HEIGHT * 12
+            x_end = CELL_DRAW_SIZE[0] * 8
+            y_end = CELL_DRAW_SIZE[1] * 12
             img[y_start:y_end, x_start:x_end] = (127, 127, 127)
 
             draw_square(7, 9, CELL_COLORS[self.next_beans[0]])
@@ -115,8 +113,8 @@ class Puyo1Board(object):
                              '"{}".'.format(x))
 
         for y in range(12):
-            if self._board[x][y] == b' ':
-                self._board[x][y] = color
+            if self.board[x][y] == b' ':
+                self.board[x][y] = color
                 break
 
     def _eliminate_beans(self):
@@ -125,8 +123,8 @@ class Puyo1Board(object):
         def eliminate_if_black_bean(x, y):
             if x < 0 or x > 5 or y < 0 or y > 11:
                 return 0
-            if self._board[x][y] == b'k':
-                self._board[x][y] = b' '
+            if self.board[x][y] == b'k':
+                self.board[x][y] = b' '
                 return 1
             return 0
 
@@ -141,14 +139,14 @@ class Puyo1Board(object):
                     n_eliminated += eliminate_if_black_bean(x+1, y)
                     n_eliminated += eliminate_if_black_bean(x, y-1)
                     n_eliminated += eliminate_if_black_bean(x, y+1)
-                    self._board[x][y] = b' '
+                    self.board[x][y] = b' '
                     n_eliminated += 1
 
         return n_eliminated
 
     def _get_connected(self, x, y):
         """Return a list of coordinates connected by color to (x, y)."""
-        color = self._board[x][y]
+        color = self.board[x][y]
         if color == b' ' or color == b'k':
             return []
 
@@ -159,7 +157,7 @@ class Puyo1Board(object):
                 return
             if x < 0 or x >= 6 or y < 0 or y >= 12:
                 return
-            if self._board[x][y] == color:
+            if self.board[x][y] == color:
                 visited.add((x, y))
 
                 visit(x-1, y)
@@ -177,10 +175,10 @@ class Puyo1Board(object):
             lowest_free_y = 0
             for y in range(12):
 
-                if self._board[x][y] != b' ':
+                if self.board[x][y] != b' ':
 
-                    tmp = self._board[x][lowest_free_y]
-                    self._board[x][lowest_free_y] = self._board[x][y]
-                    self._board[x][y] = tmp
+                    tmp = self.board[x][lowest_free_y]
+                    self.board[x][lowest_free_y] = self.board[x][y]
+                    self.board[x][y] = tmp
 
                     lowest_free_y += 1

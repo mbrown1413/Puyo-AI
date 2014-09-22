@@ -18,7 +18,7 @@ COLOR_STRINGS = {
     b'b': "Blue",
     b'y': "Yellow",
     b'p': "Purple",
-    b'k': "Red",
+    b'k': "Black (nussance)",
 }
 
 def main():

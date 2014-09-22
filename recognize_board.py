@@ -1,3 +1,6 @@
+"""
+Recognizes and reconstructs a Puyo 1 board from a video stream.
+"""
 
 import cv2
 
@@ -20,7 +23,7 @@ def open_video(source):
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", help="Video source filename or camera index")
     parser.add_argument("--player1", "-1", dest="player", const=1,
         action="store_const", help="Play as player 1. Reads the left side of "
@@ -36,6 +39,7 @@ def main():
         import sys
         sys.exit(1)
 
+    #TODO: Make screen offset configurable
     bean_finder = BeanFinder((38, 13), args.player)
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
