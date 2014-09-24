@@ -49,6 +49,7 @@ class Puyo1Board(object):
             self.board = deepcopy(board)
 
         self.next_beans = next_beans
+        self.game_over = False
 
     def copy(self):
         return Puyo1Board(self.board, self.next_beans)
@@ -104,6 +105,67 @@ class Puyo1Board(object):
     def drop_black_bean(self, x):
         """Drop a single black bean from the top."""
         self._drop(x, b'k')
+
+    def make_move(self, beans, orientation, position):
+        assert len(beans) == 2
+        for bean in beans:
+            assert bean in (b'r', b'g', b'b', b'y', b'p')
+
+        if not self.can_make_move(orientation, position):
+            return False
+
+        if position == 2 and orientation == 0 and self.board[2][11] != b' ':
+            # This column is filled, so it's the only valid move, and results
+            # in a game over.
+            self.game_over = True
+            return True
+
+        if orientation > 1:
+            orientation -= 2
+        else:
+            beans = (beans[1], beans[0])
+
+        if orientation == 0:
+            self.drop_beans((position, position), beans)
+        else:
+            self.drop_beans((position, position+1), beans)
+
+        return True
+
+    def can_make_move(self, orientation, position):
+        if self.game_over:
+            return False
+
+        # Is this even a valid move?
+        assert orientation in range(4)
+        if orientation % 2 == 0:
+            assert position in range(6)
+        else:
+            assert position in range(5)
+
+        # Any beans blocking the path?
+        if position == 2 and orientation == 0:
+            # This move is always possible. If this column is completely
+            # filled, this move results in a game over.
+            return True
+        elif position >= 2:
+            pos_range = range(2, position+1 + orientation%2)
+        else:
+            pos_range = range(2, position-1, -1)
+        for i in pos_range:
+            if self.board[i][11] != b' ':
+                return False
+
+        return True
+
+    def iter_moves(self):
+        for orientation in range(4):
+            for position in range(5 if orientation%2 else 6):
+                if self.can_make_move(orientation, position):
+                    yield orientation, position
+
+    def is_game_over(self):
+        return self.game_over
 
     def _drop(self, x, color):
         if color not in VALID_CELLS:
