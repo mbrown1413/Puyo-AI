@@ -7,7 +7,7 @@ import random
 import cv2
 
 from puyo.board import Puyo1Board
-from puyo.ai import Puyo1DummyAI
+from puyo.ai import SimpleGreedyAI
 
 def random_bean():
     return random.choice((b'r', b'g', b'b', b'y', b'p'))
@@ -18,7 +18,7 @@ def random_next_beans():
 def main():
 
     board = Puyo1Board(next_beans=random_next_beans())
-    ai = Puyo1DummyAI()
+    ai = SimpleGreedyAI()
 
     cv2.namedWindow("Puyo Board")
     while True:
@@ -38,6 +38,8 @@ def main():
                     combo = board.make_move(current_beans, orientation, position)
                 else:
                     print "Invalid Move:", orientation, position
+                #if random.randint(0, 9) > 6:
+                #    board.drop_black_bean(random.randint(0, 5))
 
             if board.is_game_over():
                 print "Game Over"

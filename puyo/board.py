@@ -311,7 +311,7 @@ class Puyo1Board(object):
         group_bonus = 0
         for x in range(6):
             for y in range(12):
-                coordinates = self._get_connected(x, y)
+                coordinates = self.get_connected(x, y)
                 if len(coordinates) < 4:
                     continue
 
@@ -331,7 +331,7 @@ class Puyo1Board(object):
 
         return n_beans, len(colors_eliminated), group_bonus
 
-    def _get_connected(self, x, y):
+    def get_connected(self, x, y):
         """Return a list of coordinates connected by color to (x, y)."""
         color = self.board[x][y]
         if color == b' ' or color == b'k':
