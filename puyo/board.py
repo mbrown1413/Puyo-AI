@@ -1,5 +1,7 @@
 
+import itertools
 from copy import deepcopy
+from collections import namedtuple
 
 import numpy
 
@@ -25,6 +27,13 @@ CELL_COLORS = {
     b'p': (128, 0, 128),
     b'k': (0, 0, 0),
 }
+
+# Score calculation tables
+CHAIN_POWER_TABLE = (0, 8, 16, 32, 64, 128, 256, 512, 999)
+COLOR_BONUS_TABLE = (0, 0, 3, 6, 12, 24)
+GROUP_BONUS_TABLE = (0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10)
+
+Combo = namedtuple("Combo", "score n_beans")
 
 def _validate_board(board, width, height):
     if len(board) != width:
@@ -145,14 +154,36 @@ class Puyo1Board(object):
         actually playing a game, you should use `make_move()`, which is a bit
         higher level since it only allows actually valid moves.
 
-        TODO: Return namedtuple of (score, n_eliminated)
+        A Combo object is returned.
 
         """
         for x, color in zip(xs, colors):
             self._drop(x, color)
 
-        while self._eliminate_beans() != 0:
+        total_score = 0
+        total_n_beans = 0
+        for i in itertools.count():
+            n_beans, n_colors, group_bonus = self._eliminate_beans()
+            if n_beans == 0:
+                break
+
+            # Calculate Score
+            # Based on: http://puyonexus.net/wiki/Scoring
+            if i >= len(CHAIN_POWER_TABLE):
+                chain_power = CHAIN_POWER_TABLE[-1]
+            else:
+                chain_power = CHAIN_POWER_TABLE[i]
+            color_bonus = COLOR_BONUS_TABLE[n_colors]
+            multiplier = chain_power + color_bonus + group_bonus
+            multiplier = max(1, min(999, multiplier))
+            score = 10 * n_beans * multiplier
+
+            total_score += score
+            total_n_beans += n_beans
+
             self._do_gravity()
+
+        return Combo(total_score, total_n_beans)
 
     def drop_black_bean(self, x):
         """Drop a single black bean from the top."""
@@ -177,7 +208,10 @@ class Puyo1Board(object):
         valid if there is a game over. To check if a move is valid beforehand,
         use `can_make_move()`.
 
-        TODO: Return score results from `drop_beans()`.
+        If the given move is valid, the board state is changed and a Combo
+        object is returned, which contains information such as the combo's
+        score. Note that a Combo object is still returned if zero beans were
+        eliminated.
 
         """
         assert len(beans) == 2
@@ -191,7 +225,7 @@ class Puyo1Board(object):
             # This column is filled, so it's the only valid move, and results
             # in a game over.
             self.game_over = True
-            return True
+            return Combo(0, 0)
 
         if orientation > 1:
             orientation -= 2
@@ -199,11 +233,9 @@ class Puyo1Board(object):
             beans = (beans[1], beans[0])
 
         if orientation == 0:
-            self.drop_beans((position, position), beans)
+            return self.drop_beans((position, position), beans)
         else:
-            self.drop_beans((position, position+1), beans)
-
-        return True
+            return self.drop_beans((position, position+1), beans)
 
     def can_make_move(self, orientation, position):
         """Return True if the move can be made, False otherwise."""
@@ -265,7 +297,6 @@ class Puyo1Board(object):
                 break
 
     def _eliminate_beans(self):
-        n_eliminated = 0
 
         def eliminate_if_black_bean(x, y):
             if x < 0 or x > 5 or y < 0 or y > 11:
@@ -275,21 +306,30 @@ class Puyo1Board(object):
                 return 1
             return 0
 
+        n_beans = 0
+        colors_eliminated = set()
+        group_bonus = 0
         for x in range(6):
             for y in range(12):
                 coordinates = self._get_connected(x, y)
                 if len(coordinates) < 4:
                     continue
 
-                for x, y in coordinates:
-                    n_eliminated += eliminate_if_black_bean(x-1, y)
-                    n_eliminated += eliminate_if_black_bean(x+1, y)
-                    n_eliminated += eliminate_if_black_bean(x, y-1)
-                    n_eliminated += eliminate_if_black_bean(x, y+1)
-                    self.board[x][y] = b' '
-                    n_eliminated += 1
+                colors_eliminated.add(self.board[x][y])
+                if len(coordinates) >= len(GROUP_BONUS_TABLE):
+                    group_bonus += GROUP_BONUS_TABLE[-1]
+                else:
+                    group_bonus += GROUP_BONUS_TABLE[len(coordinates)]
 
-        return n_eliminated
+                for x, y in coordinates:
+                    n_beans += eliminate_if_black_bean(x-1, y)
+                    n_beans += eliminate_if_black_bean(x+1, y)
+                    n_beans += eliminate_if_black_bean(x, y-1)
+                    n_beans += eliminate_if_black_bean(x, y+1)
+                    self.board[x][y] = b' '
+                    n_beans += 1
+
+        return n_beans, len(colors_eliminated), group_bonus
 
     def _get_connected(self, x, y):
         """Return a list of coordinates connected by color to (x, y)."""

@@ -35,7 +35,7 @@ def main():
                 board.next_beans = random_next_beans()
                 orientation, position = ai.move(board, current_beans)
                 if board.can_make_move(orientation, position):
-                    board.make_move(current_beans, orientation, position)
+                    combo = board.make_move(current_beans, orientation, position)
                 else:
                     print "Invalid Move:", orientation, position
 

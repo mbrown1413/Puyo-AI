@@ -42,7 +42,7 @@ def main():
         elif key >= ord('1') and key <= ord('6'):
             if current_color is not None:
                 last_board = board.copy()
-                board.drop_beans([int(chr(key))-1], [current_color])
+                combo = board.drop_beans([int(chr(key))-1], [current_color])
             else:
                 print "No color selected. Select using r, g, b, y, p or k."
         elif key == ord('u'):
