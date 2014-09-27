@@ -33,7 +33,7 @@ CHAIN_POWER_TABLE = (0, 8, 16, 32, 64, 128, 256, 512, 999)
 COLOR_BONUS_TABLE = (0, 0, 3, 6, 12, 24)
 GROUP_BONUS_TABLE = (0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10)
 
-Combo = namedtuple("Combo", "score n_beans")
+Combo = namedtuple("Combo", "score n_beans length")
 
 def _validate_board(board, width, height):
     if len(board) != width:
@@ -183,7 +183,7 @@ class Puyo1Board(object):
 
             self._do_gravity()
 
-        return Combo(total_score, total_n_beans)
+        return Combo(total_score, total_n_beans, i)
 
     def drop_black_bean(self, x):
         """Drop a single black bean from the top."""
@@ -225,7 +225,7 @@ class Puyo1Board(object):
             # This column is filled, so it's the only valid move, and results
             # in a game over.
             self.game_over = True
-            return Combo(0, 0)
+            return Combo(0, 0, 0)
 
         if orientation > 1:
             orientation -= 2
