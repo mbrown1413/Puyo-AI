@@ -88,7 +88,11 @@ class BeanFinder(object):
         next2 = self._crop_cell(img,
                                 *self.next_bean_offsets[1],
                                 image_coordinates=True)
-        return (self._detect_color(next1), self._detect_color(next2))
+        next_beans = (self._detect_color(next1), self._detect_color(next2))
+        if next_beans[0] not in (b'r', b'g', b'b', b'y', b'p') or \
+           next_beans[1] not in (b'r', b'g', b'b', b'y', b'p'):
+            next_beans = None
+        return next_beans
 
     def _detect_color(self, img):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)

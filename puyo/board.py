@@ -262,6 +262,9 @@ class Puyo1Board(object):
             if self.board[i][11] != b' ':
                 return False
 
+        # Make sure there is room to rotate the beans
+        #TODO
+
         return True
 
     def iter_moves(self):
