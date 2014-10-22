@@ -13,38 +13,53 @@ other games though.
 Status
 ======
 
-This is a work in progress, so it doesn't run end-to-end yet. Here's the
-progress of each component:
+This is a work in progress, but it does run end-to-end. Here's the progress of
+each major component:
 
  * Vision Processing - Determines game state from video input.
-   * Status: Complete except for some possible tweaks later.
+   * Status: Complete except for some minor color recognition bugs.
  * Artificial Intelligence - Decides where pieces should be placed based on the
         current game state.
    * Status: There are some simple AIs written, but there is a lot more work to
              do before they are competitive.
  * Game Control - Sends button presses to the game based on the output of the
         AI.
-   * Status: In Progress
+   * Status: Basic functionality finished.
 
 Milestones:
 
- 1. Simple AI controlling the game
+ 1. ~~Simple AI controlling the game~~
  1. AI that can beat the early opponents
  1. AI that can beat me (I'm not that good)
  1. AI that can beat the final boss, Dr. Robotnik
 
 
-Usage
+Setup
 =====
 
 First of all, you'll need:
 
  * `python2.7`
+ * `pyserial`
  * `numpy`
  * `OpenCV` with the `cv2` Python bindings
 
-Right now there are a bunch of scripts to manually test components. For some of these you can use `--help` to get details on usage.
+**TODO**
 
+ * Arduino Setup: **TODO**
+ * Video Setup: **TODO**
+
+
+Usage
+=====
+
+`run.py` is the main script that runs all components in tandem. There are also
+a bunch of scripts to manually test components. For some of these you can use
+`--help` to get details on usage.
+
+ * `run.py` - Plays the game. Recognizes game state through video, decides
+        what move to make, and makes it.
+ * `gc_send.py` - Sends a command to the arduino controlling the Gamecube.
  * `simulate_ai.py` - For testing AIs. Reproduces the mechanics of the game and
         lets the AI make moves.
  * `simulate_board.py` - For testing the game mechanics. Allows the user to
