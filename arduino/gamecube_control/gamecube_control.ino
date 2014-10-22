@@ -21,21 +21,26 @@
 
 #include "pins_arduino.h"
 
+
+
 // 8 bytes of data that we send to the GC, in packed format ready to push onto
 // the wire.
-// This is a static, global variable (not a struct definition)
-static struct {
+typedef struct {
     // bits: 0, 0, 0, start, y, x, b, a
     unsigned char data1;
     // bits: 1, L, R, Z, Dup, Ddown, Dright, Dleft
     unsigned char data2;
-    unsigned char stick_x;
+    unsigned char stick_x;  // 128 is center for stick and cstick
     unsigned char stick_y;
     unsigned char cstick_x;
     unsigned char cstick_y;
-    unsigned char left;
+    unsigned char left;  // left/right trigger analog
     unsigned char right;
-} gc_status;
+} GCStatus;
+
+static const GCStatus initial_gc_status = {0, 0, 128, 128, 128, 128, 0, 0};
+
+static GCStatus gc_status = initial_gc_status;
 
 // Response to the identify (0x00) command
 // Some of the meaning of this response is described here:
@@ -50,6 +55,24 @@ static unsigned char origin_response[] = {
     0x85, 0x1f, 0x22, 0x00, 0x00
 };
 
+static const int MOVE_QUEUE_MAX = 10;
+typedef struct {
+    struct {
+        GCStatus status;
+        unsigned int count;
+    } queue[MOVE_QUEUE_MAX];
+    int n;
+    int pos;
+} MoveQueue;
+
+static MoveQueue move_queue;
+
+static void MoveQueue_clear(MoveQueue* mq);
+static void MoveQueue_add_move(MoveQueue* mq, const GCStatus* status, unsigned int count);
+static const GCStatus* MoveQueue_get_status(const MoveQueue* mq);
+static const GCStatus* MoveQueue_next(MoveQueue* mq);
+
+
 void setup() {
 
     // Make sure the data pins stay LOW and in INPUT mode when idle.
@@ -57,21 +80,13 @@ void setup() {
     digitalWrite(2, LOW);
     pinMode(2, INPUT);
 
-    // Initialize gc_status
-    gc_status.data1 = 0;
-    gc_status.data2 = 0;
-    gc_status.stick_x = 128;  // 128 = centered
-    gc_status.stick_y = 128;
-    gc_status.cstick_x = 128;
-    gc_status.cstick_y = 128;
-    gc_status.left = 0;
-    gc_status.right = 0;
+    Serial.begin(115200);
 
-    Serial.begin(9600);
+    MoveQueue_clear(&move_queue);
 
 }
 
-int i=0;
+unsigned int i=0;
 void loop() {
     int ret;
     unsigned char from_gc;
@@ -109,14 +124,102 @@ void loop() {
 
     }
 
-    // Don't do anything useful yet, just press 'A' a bunch.
-    if(millis() % 26 > 13) {
-        gc_status.data1 = 0x01;
-    } else {
-        gc_status.data1 = 0x00;
+    if(Serial.available()) {
+        GCStatus tmp_status = initial_gc_status;
+
+        unsigned char b = Serial.read();
+        int delta_x = ((b & 0x38) >> 3) - 2;  // Amount to move left/right
+        int rot = (b & 0x06) >> 1;  // # clockwise rotations
+        bool down_fast = (b & 0x01);  // Drop piece quickly?
+
+        MoveQueue_clear(&move_queue);
+
+        do {
+
+            if(delta_x > 0) {
+                tmp_status.stick_x = 255;
+                delta_x--;
+            } else if(delta_x < 0) {
+                tmp_status.stick_x = 0;
+                delta_x++;
+            }
+
+            switch(rot) {
+                case 1:
+                case 2:
+                    tmp_status.data1 |= 0x04;  // Press X, rotate clockwise
+                    rot--;
+                break;
+                case 3:
+                    tmp_status.data1 |= 0x01;  // Press A, rotate anticlockwise
+                    rot = 0;
+                break;
+            }
+
+            MoveQueue_add_move(&move_queue, &tmp_status, 1);
+
+            // Clear controller
+            tmp_status = initial_gc_status;
+            if(delta_x != 0 || rot != 0) {
+                MoveQueue_add_move(&move_queue, &tmp_status, 1);
+            }
+
+        } while(delta_x != 0 || rot != 0);
+
+        if(down_fast) {
+            tmp_status.stick_y = 0;
+            MoveQueue_add_move(&move_queue, &tmp_status, 8);
+        }
+
+        // Clear controller one last time
+        tmp_status = initial_gc_status;
+        MoveQueue_add_move(&move_queue, &tmp_status, 1);
+
+        // Reset counter and get the first status from the queue
+        i = 0;
+        gc_status = *MoveQueue_get_status(&move_queue);
+
+    // Get next gc_status from move_queue every once in a while
+    } else if(i % 5 == 0) {
+        gc_status = *MoveQueue_next(&move_queue);
     }
 
     i++;
+}
+
+static void MoveQueue_clear(MoveQueue* mq) {
+    mq->n = 0;
+    mq->pos = 0;
+    mq->queue[0].status = initial_gc_status;
+}
+
+static void MoveQueue_add_move(MoveQueue* mq, const GCStatus* status, unsigned int count) {
+    if(mq->n >= MOVE_QUEUE_MAX) {
+        return;
+    }
+    memcpy((void*) &mq->queue[mq->n].status, (void*) status, sizeof(GCStatus));
+    mq->queue[mq->n].count = count;
+    mq->n++;
+}
+
+static const GCStatus* MoveQueue_get_status(const MoveQueue* mq) {
+    if(mq->pos < 0 || mq->pos >= mq->n) {
+        return &initial_gc_status;
+    }
+    return &mq->queue[mq->pos].status;
+}
+
+static const GCStatus* MoveQueue_next(MoveQueue* mq) {
+    if(mq->pos >= mq->n) {
+        MoveQueue_clear(mq);
+    } else {
+        mq->queue[mq->pos].count--;
+        if(mq->queue[mq->pos].count == 0) {
+            mq->pos++;
+        }
+    }
+    const GCStatus* status = MoveQueue_get_status(mq);
+    return status;
 }
 
 /**
