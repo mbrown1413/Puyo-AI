@@ -1,5 +1,5 @@
 """
-A simple interface for testing the Puyo1Board class.
+A simple interface for testing the PuyoBoard class.
 
 Keys:
     r g b y p k - Select red, green, blue, yellow, purple or black (nussance)
@@ -10,7 +10,7 @@ Keys:
 
 import cv2
 
-from puyo.board import Puyo1Board
+from puyo.board import PuyoBoard
 
 COLOR_STRINGS = {
     b'r': "Red",
@@ -22,7 +22,7 @@ COLOR_STRINGS = {
 }
 
 def main():
-    board = Puyo1Board()
+    board = PuyoBoard()
 
     print __doc__
 

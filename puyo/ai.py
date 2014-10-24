@@ -5,7 +5,10 @@ import itertools
 class PuyoAI(object):
 
     def move(self, board, beans):
-        """Return a move as an (orientation, position) tuple.
+        """Return a move as an `(position, rotation)` tuple.
+
+        See the docs for `puyo.PuyoBoard.make_move()` for exactly how moves
+        are defined by a position and rotation.
 
         The given pair of beans are the current beans that are dropping.
         `board.next_beans` will be the pair after that, or None if it's
@@ -29,12 +32,11 @@ class ScoreBasedAI(PuyoAI):
     def move(self, board, beans):
         score_func = lambda move: self.score_move(board, beans, *move)
         moves = list(board.iter_moves())
-        random.shuffle(moves)
+        random.shuffle(moves)  # Select randomly between ties
         move = max(moves, key=score_func)
-        #print score_func(move)
         return move
 
-    def score_move(self, board, beans, orientation, position):
+    def score_move(self, board, beans, pos, rot):
         raise NotImplementedError("This method must be implemented by a "
                                   "subclass.")
 
@@ -49,9 +51,9 @@ class SimpleGreedyAI(ScoreBasedAI):
 
     """
 
-    def score_move(self, board, beans, orientation, position):
+    def score_move(self, board, beans, pos, rot):
         board = board.copy()
-        combo = board.make_move(beans, orientation, position)
+        combo = board.make_move(beans, pos, rot)
         value = 0
 
         if combo.n_beans:
@@ -61,14 +63,18 @@ class SimpleGreedyAI(ScoreBasedAI):
             for y in range(12):
                 value += len(board.get_connected(x, y))
 
+        # Don't give yourself a game over
+        if board.board[2][11] != b' ':
+            value = 0
+
         return value
 
 
 class SimpleComboAI(ScoreBasedAI):
 
-    def score_move(self, board, beans, orientation, position):
+    def score_move(self, board, beans, pos, rot):
         board = board.copy()
-        combo = board.make_move(beans, orientation, position)
+        combo = board.make_move(beans, pos, rot)
         value = 0
 
         for color in (b'r', b'g', b'b', b'y', b'p'):

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import cv2
 
-from puyo import Puyo1Board
+from puyo import PuyoBoard
 
 CELL_CROP_SIZE = (32, 32)
 CELL_BORDER = 4
@@ -76,7 +76,7 @@ class BeanFinder(object):
         board = [[self._get_bean_at(img, x, y) for y in range(12)]
                                                for x in range(6)]
         next_beans = self._get_next_beans(img)
-        return Puyo1Board(board, next_beans)
+        return PuyoBoard(board, next_beans)
 
     def _get_bean_at(self, img, x, y):
         return self._detect_color(self._crop_cell(img, x, y))

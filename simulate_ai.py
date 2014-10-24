@@ -6,7 +6,7 @@ import random
 
 import cv2
 
-from puyo.board import Puyo1Board
+from puyo.board import PuyoBoard
 from puyo.ai import SimpleComboAI
 
 def random_bean():
@@ -27,7 +27,7 @@ def print_combo(combo):
 
 def main():
 
-    board = Puyo1Board(next_beans=random_next_beans())
+    board = PuyoBoard(next_beans=random_next_beans())
     ai = SimpleComboAI()
 
     cv2.namedWindow("Puyo Board")
@@ -45,13 +45,13 @@ def main():
                 last_board = board.copy()
                 current_beans = board.next_beans
                 board.next_beans = random_next_beans()
-                orientation, position = ai.move(board, current_beans)
-                #print current_beans, orientation, position
-                if board.can_make_move(orientation, position):
-                    combo = board.make_move(current_beans, orientation, position)
+                position, rotation = ai.move(board, current_beans)
+                #print current_beans, position, rotation
+                if board.can_make_move(position, rotation):
+                    combo = board.make_move(current_beans, position, rotation)
                     print_combo(combo)
                 else:
-                    print "Invalid Move:", orientation, position
+                    print "Invalid Move:", position, rotation
                 #if random.randint(0, 9) > 6:
                 #    board.drop_black_bean(random.randint(0, 5))
 

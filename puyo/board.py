@@ -48,14 +48,14 @@ def _validate_board(board, width, height):
                 raise ValueError('Invalid cell value "{}"'.format(cell))
 
 
-class Puyo1Board(object):
-    """One player's board of the Puyo game.
+class PuyoBoard(object):
+    """A single player's board of the Puyo game.
 
     The board is represented by a 2 dimensional array of beans, 6 wide and 12
     tall, stored in the `board` attribute. The origin is bottom left. Access it
     like this:
 
-        puyo_board = Puyo1Board()
+        puyo_board = PuyoBoard()
         puyo_board.board[x][y]
 
     Each cell is one of the following ASCII characters:
@@ -109,7 +109,7 @@ class Puyo1Board(object):
         self.game_over = False
 
     def copy(self):
-        return Puyo1Board(self.board, self.next_beans)
+        return PuyoBoard(self.board, self.next_beans)
 
     def draw(self):
         """Return an image representing the puyo board."""
@@ -189,73 +189,74 @@ class Puyo1Board(object):
         """Drop a single black bean from the top."""
         self._drop(x, b'k')
 
-    def make_move(self, beans, orientation, position):
+    def make_move(self, beans, position, rotation):
         """Drop a pair of beans as a part of a move in the game.
 
         This is the method that should be used when actually playing the game,
         as it offers the highest level of abstraction and disallows anything
         illegal in a real game.
 
-        `beans` is a tuple of 2 bean colors. The first item is the top bean,
-        the second is the bottom. `orientation` is an integer 0-3 inclusive,
-        indicating how many times the pair of beans has been rotated 90 degrees
-        clockwise. `position` is an x position on the board, with 0 the
-        leftmost position the pair can occupy. If `orientation` is 0 or 2,
-        `position` must be between 0-5 inclusive, otherwise it must be between
-        0-4 inclusive.
+        Args:
+            beans: A tuple of 2 bean colors. The first item is the top bean,
+                the second is the bottom.
+            position: The position to place the pieces, with 0 being the
+                leftmost position the pair can occupy. This meaning depends on
+                how the pieces will be rotated. If `rotation` is 0 or 2
+                (vertical), `position` must be between 0-5 inclusive. If
+                `rotation` is 1 or 3 (horizontal) it must be between 0-4
+                inclusive.
+            rotation: How many times to rotate the pieces clockwise. An
+                integer 0-3 inclusive.
 
-        If an invalid move is given, False is returned. Note that no moves are
-        valid if there is a game over. To check if a move is valid beforehand,
-        use `can_make_move()`.
-
-        If the given move is valid, the board state is changed and a Combo
-        object is returned, which contains information such as the combo's
-        score. Note that a Combo object is still returned if zero beans were
-        eliminated.
+        Returns:
+            If the given move is valid, the board is mutated and a Combo
+            object is returned. If the given move is invalid, False is
+            returned. You can check beforehand to see if a move is valid with
+            `can_make_move()`.
 
         """
         assert len(beans) == 2
         for bean in beans:
             assert bean in (b'r', b'g', b'b', b'y', b'p')
 
-        if not self.can_make_move(orientation, position):
+        if not self.can_make_move(position, rotation):
             return False
 
-        if position == 2 and orientation == 0 and self.board[2][11] != b' ':
+        if position == 2 and rotation == 0 and self.board[2][11] != b' ':
             # This column is filled, so it's the only valid move, and results
             # in a game over.
             self.game_over = True
             return Combo(0, 0, 0)
 
-        if orientation > 1:
-            orientation -= 2
+        if rotation > 1:
+            rotation -= 2
         else:
             beans = (beans[1], beans[0])
 
-        if orientation == 0:
+        if rotation == 0:
             return self.drop_beans((position, position), beans)
         else:
             return self.drop_beans((position, position+1), beans)
 
-    def can_make_move(self, orientation, position):
+    def can_make_move(self, position, rotation):
         """Return True if the move can be made, False otherwise."""
         if self.game_over:
             return False
 
         # Is this even a valid move?
-        assert orientation in range(4)
-        if orientation % 2 == 0:
+        assert rotation in range(4)
+        if rotation % 2 == 0:
             assert position in range(6)
         else:
             assert position in range(5)
 
         # Any beans blocking the path?
-        if position == 2 and orientation == 0:
+        if position == 2 and rotation == 0:
             # This move is always possible. If this column is completely
             # filled, this move results in a game over.
             return True
         elif position >= 2:
-            pos_range = range(2, position+1 + orientation%2)
+            pos_range = range(2, position+1 + rotation%2)
         else:
             pos_range = range(2, position-1, -1)
         for i in pos_range:
@@ -269,13 +270,13 @@ class Puyo1Board(object):
 
     def iter_moves(self):
         """
-        Return an iterable of possible moves, as a list of (orientation,
-        position) tuples.
+        Return an iterable of possible moves, as a list of (position,
+        rotation) tuples.
         """
-        for orientation in range(4):
-            for position in range(5 if orientation%2 else 6):
-                if self.can_make_move(orientation, position):
-                    yield orientation, position
+        for rotation in range(4):
+            for position in range(5 if rotation%2 else 6):
+                if self.can_make_move(position, rotation):
+                    yield position, rotation
 
     def is_game_over(self):
         """Has the game been lost?

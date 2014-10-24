@@ -1,5 +1,8 @@
-
-import sys
+#!/usr/bin/python
+"""
+Play Puyo Puyo by taking video input and sending commands to an Arduino based
+Gamecube controller.
+"""
 
 import cv2
 
@@ -21,10 +24,20 @@ def open_video(source):
     return video
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("video", help='Video source. An AVI filename, camera '
+        'index (ex: "0" to use /dev/video0), or format specifier (ex: '
+        '"footage/%%d.jpg"). Any format supported by the installed version of '
+        'OpenCV will work.')
+    parser.add_argument("gc_dev", help='Serial device for the Arduino '
+        'Gamecube controller. Example: "/dev/ttyACM0".')
+    args = parser.parse_args()
 
-    video = open_video(sys.argv[1])
+    video = open_video(args.video)
     if not video:
         print("Cannot open video stream")
+        import sys
         sys.exit(1)
 
     #TODO: Make screen offset configurable
@@ -33,7 +46,7 @@ def main():
     cv2.namedWindow("Grid")
 
     ai = puyo.SimpleComboAI()
-    controller = puyo.GamecubeControl(sys.argv[2])
+    controller = puyo.GamecubeControl(args.gc_dev)
 
     current_beans = None
     while True:
@@ -50,9 +63,8 @@ def main():
         cv2.imshow("Grid", board.draw())
 
         if current_beans is not None and current_beans != board.next_beans:
-            print current_beans
-            orientation, position = ai.move(board, current_beans)
-            controller.puyo_move(position, orientation)
+            position, rotation = ai.move(board, current_beans)
+            controller.puyo_move(position, rotation)
         current_beans = board.next_beans
 
         key = cv2.waitKey(10) % 256
