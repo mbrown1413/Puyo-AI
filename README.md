@@ -1,13 +1,11 @@
 
-This program plays Puyo Puyo 1. It takes input from a video capture card,
-processes the images and outputs controller movements to an Arduino that acts
-as a Gamecube controller.
+A program that plays Puyo Puyo:
 
-Why only Puyo 1 played on a Gamecube? I own a copy of Dr. Robotnik's Mean Bean
-Machine, which is based on Puyo 1, as a part of the Sonic Mega Collection on
-the Gamecube. The image recognition and controller output is based on that game
-and system, since that's what I have. Everything should be easily adaptable to
-other games though.
+![Puyo Puyo 1 Screenshot](img/game_screenshot.png)
+
+...not in an emulator, it plays for real. Instead of eyes, it has a video capture card. Instead of hands it has an Arduino plugged into a controller slot.
+
+The game is Puyo Puyo, a competitive tetris-like tile matching game. Planning combos is essential to playing the game well, so it's perfect to write an AI for. The version I use is called "Dr. Robotnik's Mean Bean Machine" on the Gamecube (in the "Sonic Mega Collection"). That's just the version I happen to have and test with.
 
 
 Setup
