@@ -264,7 +264,9 @@ class PuyoBoard(object):
                 return False
 
         # Make sure there is room to rotate the beans
-        #TODO
+        if rotation != 0 and self.board[1][11] != b' ' and \
+                             self.board[3][11] != b' ':
+            return False
 
         return True
 
