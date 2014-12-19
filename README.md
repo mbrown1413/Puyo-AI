@@ -43,6 +43,27 @@ details on usage.
         and shows the reconstructed game state.
 
 
+How it Works
+============
+
+![Control Flow Diagram](img/components.png)
+
+Computer Vision
+---------------
+
+**TODO**
+
+Artificial Intelligence
+-----------------------
+
+**TODO**
+
+Game Control
+------------
+
+**TODO**
+
+
 Status
 ======
 
