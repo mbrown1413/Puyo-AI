@@ -86,8 +86,9 @@ class PuyoBoard(object):
             board = [[blah for y in range(12)]
                            for x in range(6)]
 
-        The given board will be copied upon initialization, so don't worry
-        about mutability.
+        where the lower left is `board[0][0]` and the upper left is
+        `board[0][11]`. The given board will be copied upon initialization, so
+        don't worry about mutability.
 
         If `next_beans` is given, it should be a list of 2 bean colors (black,
         or nuisance beans aren't allowed).
