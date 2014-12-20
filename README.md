@@ -51,17 +51,26 @@ How it Works
 Computer Vision
 ---------------
 
-**TODO**
+The computer vision component takes raw video from a file or video capture device and outputs the current state of the game. The game state consists of a grid of beans, plus a pair of next beans.
+
+See: [puyo/beanfinder.py](puyo/beanfinder.py)
 
 Artificial Intelligence
 -----------------------
 
-**TODO**
+Whenever a pair of beans start to fall, the AI is called and given the current game state. It determines the best move to make, and returns a (position, rotation) pair representing the move.
+
+See: [puyo/ai.py](puyo/ai.py)
 
 Game Control
 ------------
 
-**TODO**
+After the AI returns a move, the move is transmitted via serial to an Arduino, which plugs into the Gamecube. It mimicks a real controller by implementing the physical controller protocol. Once the Arduino has executed the move, the computer vision component continues to watch the raw video.
+
+The code for the game control is split between the microcontroller and the python code:
+
+ * [arduino/gamecube_control/](arduino/gamecube_control/)
+ * [puyo/gccontrol.py](puyo/gccontrol.py)
 
 
 Status
@@ -70,15 +79,9 @@ Status
 This is a work in progress, but it does run end-to-end. Here's the progress of
 each major component:
 
- * Vision Processing - Determines game state from video input.
-   * Status: Works decently well, but still has some color recognition bugs.
- * Artificial Intelligence - Decides where pieces should be placed based on the
-        current game state.
-   * Status: There are some simple AIs written, but there is a lot more work to
-             do before they are competitive.
- * Game Control - Sends button presses to the game based on the output of the
-        AI.
-   * Status: Basic functionality finished.
+ * Vision Processing - Works decently well, but still has some color recognition bugs.
+ * Artificial Intelligence - There are some simple AIs written, but there is a lot more work to do before they are competitive.
+ * Game Control - Basic functionality finished.
 
 Milestones:
 
