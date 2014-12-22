@@ -32,7 +32,13 @@ def main():
     parser.add_argument("-a", "--ai", choices=ai_names,
         default=puyo.DEFAULT_AI_NAME, help="AI to run. Choose one of: {} "
         "(default: {})".format(ai_names, puyo.DEFAULT_AI_NAME))
+    parser.add_argument("-n", "--nuisance", type=float, default=0,
+         dest="nuisance_probability", help="Probability (0-1) of a nuisance "
+         "bean being dropped.")
     args = parser.parse_args()
+    if args.nuisance_probability < 0 or args.nuisance_probability > 1:
+        parser.error("Nuisance probability (-n, --nuisance) must be between "
+            "0 and 1.")
 
     board = puyo.PuyoBoard(next_beans=random_next_beans())
     ai = puyo.AI_REGISTRY[args.ai]()
@@ -63,8 +69,9 @@ def main():
                     print_combo(combo)
                 else:
                     print "Invalid Move:", position, rotation
-                #if random.randint(0, 9) > 6:
-                #    board.drop_black_bean(random.randint(0, 5))
+
+                if random.uniform(0, 1) < args.nuisance_probability:
+                    board.drop_black_bean(random.randint(0, 5))
 
             if board.is_game_over():
                 print "Game Over"
