@@ -6,8 +6,8 @@ import random
 
 import cv2
 
-from puyo.board import PuyoBoard
-from puyo.ai import SimpleComboAI
+import puyo
+
 
 def random_bean():
     return random.choice((b'r', b'g', b'b', b'y', b'p'))
@@ -26,9 +26,20 @@ def print_combo(combo):
         print
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    ai_names = list(puyo.AI_REGISTRY.keys())
+    parser.add_argument("-a", "--ai", choices=ai_names,
+        default=puyo.DEFAULT_AI_NAME, help="AI to run. Choose one of: {} "
+        "(default: {})".format(ai_names, puyo.DEFAULT_AI_NAME))
+    args = parser.parse_args()
 
-    board = PuyoBoard(next_beans=random_next_beans())
-    ai = SimpleComboAI()
+    board = puyo.PuyoBoard(next_beans=random_next_beans())
+    ai = puyo.AI_REGISTRY[args.ai]()
+
+    print("Keys:")
+    print("  Space: Make move")
+    print("  Escape: Quit")
 
     cv2.namedWindow("Puyo Board")
     while True:
