@@ -1,18 +1,37 @@
+"""PuyoAI and subclasses, which determine what moves to make in a Puyo game.
+
+All AIs subclass from the PuyoAI class and define a `move` method that
+determines the next move that is made. To make an AI available, add it to
+`puyo.AI_REGISTRY` defined in "puyo/__init__.py".
+
+"""
 
 import random
 import itertools
 
+
 class PuyoAI(object):
+    """Abstract base AI class."""
 
     def move(self, board, beans):
-        """Return a move as an `(position, rotation)` tuple.
+        """Determine the next move to make.
 
-        See the docs for `puyo.PuyoBoard.make_move()` for exactly how moves
-        are defined by a position and rotation.
+        Args:
+            board: The current state of the game as a PuyoBoard object.
+                `board.next_beans` is a pair of beans that represents not the
+                current beans that are dropping, but the next pair that will
+                drop, or None if it is unknown.
+            beans: The current pair of beans that are dropping. The return
+                value will determine where these beans go.
 
-        The given pair of beans are the current beans that are dropping.
-        `board.next_beans` will be the pair after that, or None if it's
-        unknown.
+        Returns:
+            A move as a `(position, rotation)` tuple. See the docs for
+            `puyo.PuyoBoard.make_move()` for exactly how moves are defined by a
+            position and rotation.
+
+        Note that the user of a PuyoAI subclass is allowed to call this
+        function without actually performing the returned move. Don't keep
+        state from one call to the next that makes this assumption.
 
         """
         raise NotImplementedError("This method must be implemented by a "
@@ -28,6 +47,7 @@ class Puyo1DummyAI(PuyoAI):
 
 
 class ScoreBasedAI(PuyoAI):
+    """Abstract class for a PuyoAI that works by scoring each possible move."""
 
     def move(self, board, beans):
         score_func = lambda move: self.score_move(board, beans, *move)
@@ -37,6 +57,18 @@ class ScoreBasedAI(PuyoAI):
         return move
 
     def score_move(self, board, beans, pos, rot):
+        """Return a score for a particular move.
+
+        Args:
+            board, beans: Same as `move`.
+            pos, rot: A possible return value for `move`. Note that the move
+                has not yet been applied to the board passed to this method.
+
+        Returns:
+            A score as a float or int. The greatest scored move will be chosen
+            and returned by `move`, with ties broken randomly.
+
+        """
         raise NotImplementedError("This method must be implemented by a "
                                   "subclass.")
 
@@ -71,6 +103,10 @@ class SimpleGreedyAI(ScoreBasedAI):
 
 
 class SimpleComboAI(ScoreBasedAI):
+    """
+    Like the SimpleGreedyAI, but it values moves more when they have the
+    potential to make combos.
+    """
 
     def score_move(self, board, beans, pos, rot):
         board = board.copy()
