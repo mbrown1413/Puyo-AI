@@ -1,6 +1,6 @@
 """PuyoAI and subclasses, which determine what moves to make in a Puyo game.
 
-All AIs subclass from the PuyoAI class and define a `move` method that
+All AIs subclass from the PuyoAI class and define a `get_move` method that
 determines the next move that is made. To make an AI available, add it to
 `puyo.AI_REGISTRY` defined in "puyo/__init__.py".
 
@@ -13,7 +13,7 @@ import itertools
 class PuyoAI(object):
     """Abstract base AI class."""
 
-    def move(self, board, beans):
+    def get_move(self, board, beans):
         """Determine the next move to make.
 
         Args:
@@ -41,7 +41,7 @@ class PuyoAI(object):
 class Puyo1DummyAI(PuyoAI):
     """AI that makes completely random moves."""
 
-    def move(self, board, beans):
+    def get_move(self, board, beans):
         possible_moves = board.iter_moves()
         return random.choice(list(possible_moves))
 
@@ -49,7 +49,7 @@ class Puyo1DummyAI(PuyoAI):
 class ScoreBasedAI(PuyoAI):
     """Abstract class for a PuyoAI that works by scoring each possible move."""
 
-    def move(self, board, beans):
+    def get_move(self, board, beans):
         score_func = lambda move: self.score_move(board, beans, *move)
         moves = list(board.iter_moves())
         random.shuffle(moves)  # Select randomly between ties
@@ -60,13 +60,13 @@ class ScoreBasedAI(PuyoAI):
         """Return a score for a particular move.
 
         Args:
-            board, beans: Same as `move`.
-            pos, rot: A possible return value for `move`. Note that the move
+            board, beans: Same as `get_move`.
+            pos, rot: A possible return value for `get_move`. Note that the move
                 has not yet been applied to the board passed to this method.
 
         Returns:
             A score as a float or int. The greatest scored move will be chosen
-            and returned by `move`, with ties broken randomly.
+            and returned by `get_move`, with ties broken randomly.
 
         """
         raise NotImplementedError("This method must be implemented by a "
