@@ -32,6 +32,10 @@ def main():
         'OpenCV will work.')
     parser.add_argument("gc_dev", help='Serial device for the Arduino '
         'Gamecube controller. Example: "/dev/ttyACM0".')
+    ai_names = list(puyo.AI_REGISTRY.keys())
+    parser.add_argument("-a", "--ai", choices=ai_names,
+        default=puyo.DEFAULT_AI_NAME, help="AI to use. Choose one of: {} "
+        "(default: {})".format(ai_names, puyo.DEFAULT_AI_NAME))
     args = parser.parse_args()
 
     video = open_video(args.video)
@@ -45,7 +49,7 @@ def main():
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
 
-    ai = puyo.SimpleComboAI()
+    ai = puyo.AI_REGISTRY[args.ai]()
     controller = puyo.GamecubeControl(args.gc_dev)
 
     current_beans = None
