@@ -67,7 +67,7 @@ def main():
         cv2.imshow("Grid", board.draw())
 
         if current_beans is not None and current_beans != board.next_beans:
-            position, rotation = ai.move(board, current_beans)
+            position, rotation = ai.get_move(board, current_beans)
             controller.puyo_move(position, rotation)
         current_beans = board.next_beans
 
