@@ -38,7 +38,7 @@ class PuyoAI(object):
                                   "subclass.")
 
 
-class Puyo1DummyAI(PuyoAI):
+class RandomAI(PuyoAI):
     """AI that makes completely random moves."""
 
     def get_move(self, board, beans):

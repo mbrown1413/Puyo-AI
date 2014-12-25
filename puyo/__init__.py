@@ -1,11 +1,12 @@
 from puyo.board import PuyoBoard
 from puyo.beanfinder import BeanFinder
 from puyo.gccontrol import GamecubeControl
-from puyo.ai import SimpleComboAI, SimpleGreedyAI
+from puyo import ai
 
 AI_REGISTRY = {
-    'simple_combo': SimpleComboAI,
-    'simple_greedy': SimpleGreedyAI,
+    'simple_combo': ai.SimpleComboAI,
+    'random': ai.RandomAI,
+    'simple_greedy': ai.SimpleGreedyAI,
 }
 
 DEFAULT_AI_NAME = "simple_combo"
