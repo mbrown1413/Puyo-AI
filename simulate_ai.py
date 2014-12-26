@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 Simulates an AI playing the game.
 """
@@ -62,7 +63,7 @@ def main():
                 last_board = board.copy()
                 current_beans = board.next_beans
                 board.next_beans = random_next_beans()
-                position, rotation = ai.get_move(board, current_beans)
+                position, rotation = ai.get_move(board.copy(), current_beans)
                 #print current_beans, position, rotation
                 if board.can_make_move(position, rotation):
                     combo = board.make_move(current_beans, position, rotation)

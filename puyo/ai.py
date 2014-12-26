@@ -50,7 +50,7 @@ class ScoreBasedAI(PuyoAI):
     """Abstract class for a PuyoAI that works by scoring each possible move."""
 
     def get_move(self, board, beans):
-        score_func = lambda move: self.score_move(board, beans, *move)
+        score_func = lambda move: self.score_move(board.copy(), beans, *move)
         moves = list(board.iter_moves())
         random.shuffle(moves)  # Select randomly between ties
         move = max(moves, key=score_func)
