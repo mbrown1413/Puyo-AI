@@ -97,7 +97,7 @@ class SimpleGreedyAI(ScoreBasedAI):
 
         # Don't give yourself a game over
         if board.board[2][11] != b' ':
-            value = 0
+            value = float("-inf")
 
         return value
 
@@ -130,6 +130,6 @@ class SimpleComboAI(ScoreBasedAI):
 
         # Don't give yourself a game over
         if board.board[2][11] != b' ':
-            value = 0
+            value = float("-inf")
 
         return value
