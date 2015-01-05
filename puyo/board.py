@@ -186,6 +186,10 @@ class PuyoBoard(object):
 
         return Combo(total_score, total_n_beans, i)
 
+    def drop_bean(self, x, color):
+        """Shortcut for `drop_beans([x], [color])`."""
+        return self.drop_beans([x], [color])
+
     def drop_black_bean(self, x):
         """Drop a single black bean from the top."""
         self._drop(x, b'k')

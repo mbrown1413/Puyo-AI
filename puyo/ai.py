@@ -115,7 +115,7 @@ class SimpleComboAI(ScoreBasedAI):
 
         for color in (b'r', b'g', b'b', b'y', b'p'):
             for x in range(6):
-                tmp_combo = board.copy().drop_beans([x], [color])
+                tmp_combo = board.copy().drop_bean(x, color)
                 if tmp_combo.length >= 2:
                     value += tmp_combo.score
 
