@@ -45,7 +45,7 @@ def main():
         sys.exit(1)
 
     #TODO: Make screen offset configurable
-    bean_finder = puyo.BeanFinder((38, 13), 1)
+    vision = puyo.PuyoVision(player=1)
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
 
@@ -63,13 +63,14 @@ def main():
             continue
         cv2.imshow("Frame", img)
 
-        board = bean_finder.get_board(img)
-        cv2.imshow("Grid", board.draw())
+        state = vision.get_state(img)
+        cv2.imshow("Grid", state.board.draw())
 
-        if current_beans is not None and current_beans != board.next_beans:
-            position, rotation = ai.get_move(board.copy(), current_beans)
-            controller.puyo_move(position, rotation)
-        current_beans = board.next_beans
+        if state.new_move:
+            pos, rot = ai.get_move(state.board.copy(), current_beans)
+            controller.puyo_move(pos, rot)
+
+        current_beans = state.board.next_beans
 
         key = cv2.waitKey(10) % 256
         if key == 27:  # Escape

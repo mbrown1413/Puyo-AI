@@ -51,6 +51,12 @@ def get_color_votes(hsv_img):
 
 
 class BeanFinder(object):
+    """Stateless component of vision recognition.
+
+    Recognizes the placement of beans for a single player, including the next
+    pair of beans.
+
+    """
 
     def __init__(self, screen_offset, player=1):
         if player == 1:

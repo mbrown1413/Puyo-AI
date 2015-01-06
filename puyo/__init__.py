@@ -1,6 +1,7 @@
 from puyo.board import PuyoBoard
 from puyo.beanfinder import BeanFinder
 from puyo.gccontrol import GamecubeControl
+from puyo.vision import PuyoVision
 from puyo import ai
 
 AI_REGISTRY = {
