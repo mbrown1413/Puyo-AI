@@ -53,7 +53,12 @@ Computer Vision
 
 The computer vision component takes raw video from a file or video capture device and outputs the current state of the game. The game state consists of a grid of beans, plus a pair of next beans.
 
-See: [puyo/beanfinder.py](puyo/beanfinder.py)
+See:
+
+ * [puyo/beanfinder.py](puyo/beanfinder.py) - Stateless component that finds
+        where beans are placed in the game given a single video frame.
+ * [puyo/vision.py](puyo/vision.py) - Stateful component that gets higher level
+        information by keeping track of the game between frames.
 
 Artificial Intelligence
 -----------------------
