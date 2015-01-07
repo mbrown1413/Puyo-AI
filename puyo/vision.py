@@ -9,7 +9,7 @@ from puyo import BeanFinder
 # Items:
 #   board: The current board state as a PuyoBoard object.
 #   new_move: Did a bean just start dropping? True of False
-PlayerState = namedtuple("PlayerState", "board new_move")
+PlayerState = namedtuple("PlayerState", "board new_move current_beans")
 
 
 class PuyoVision(object):
@@ -40,7 +40,8 @@ class PuyoVision(object):
             assert player is None
         self.bean_finder = bean_finder
 
-        self.next_beans = None
+        self.next_beans = None  # Beans next to fall
+        self.current_beans = None  # Beans currently falling
 
     def get_state(self, img, dt=None):
         """Return a PlayerState object representing the current player state.
@@ -58,9 +59,15 @@ class PuyoVision(object):
         """
         board = self.bean_finder.get_board(img)
 
+        if self.next_beans is None:
+            self.next_beans = board.next_beans
+
         new_move = board.next_beans is not None and \
                     self.next_beans is not None and \
                     self.next_beans != board.next_beans
 
-        self.next_beans = board.next_beans
-        return PlayerState(board, new_move)
+        if new_move:
+            self.current_beans = self.next_beans
+            self.next_beans = board.next_beans
+
+        return PlayerState(board, new_move, self.current_beans)

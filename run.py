@@ -52,7 +52,6 @@ def main():
     ai = puyo.AI_REGISTRY[args.ai]()
     controller = puyo.GamecubeControl(args.gc_dev)
 
-    current_beans = None
     while True:
 
         was_read, img = video.read()
@@ -67,10 +66,8 @@ def main():
         cv2.imshow("Grid", state.board.draw())
 
         if state.new_move:
-            pos, rot = ai.get_move(state.board.copy(), current_beans)
+            pos, rot = ai.get_move(state.board.copy(), state.current_beans)
             controller.puyo_move(pos, rot)
-
-        current_beans = state.board.next_beans
 
         key = cv2.waitKey(10) % 256
         if key == 27:  # Escape
