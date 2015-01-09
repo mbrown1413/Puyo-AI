@@ -13,6 +13,7 @@ class TestPuyoBoard(unittest.TestCase):
         return b
 
     def test_can_make_move(self):
+        """Many test vectors for `can_make_move` method."""
         # Each test vector is a tuple of:
         #
         #     ((positions, colors), position, rotation, expected result)
@@ -84,14 +85,27 @@ class TestPuyoBoard(unittest.TestCase):
             )
 
     @unittest.skip("Test not written")
-    def test_make_move(self):
-        # Make sure the game mechanics work correctly in make_move
-        pass  #TODO
+    def test_mechanics_combo1(self):
+        """Test `make_move` method with a length 1 combo."""
+        raise NotImplementedError()
+
+    @unittest.skip("Test not written")
+    def test_mechanics_combo2(self):
+        """Test `make_move` method with a length 2 combo."""
+        raise NotImplementedError()
+
+    @unittest.skip("Test not written")
+    def test_mechanics_of_nuisance(self):
+        """Test `make_move` method when nuisance beans are present."""
+        # Four nuisance beans should not make a combo
+        # Nuisance beans should be eliminated when next to a combo
+        # ...but not diagonally
+        raise NotImplementedError()
 
     @unittest.skip("Test not written")
     def test_scoring(self):
-        # Make sure the correct combo is returned from make_move
-        pass  #TODO
+        """`make_move` method should return correct score and combo info."""
+        raise NotImplementedError()
 
 
 if __name__ == "__main__":
