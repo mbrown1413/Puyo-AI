@@ -40,6 +40,7 @@ class PuyoVision(object):
             assert player is None
         self.bean_finder = bean_finder
 
+        self.old_board = None  # Board from the previous frame
         self.next_beans = None  # Beans next to fall
         self.current_beans = None  # Beans currently falling
 
@@ -62,12 +63,33 @@ class PuyoVision(object):
         if self.next_beans is None:
             self.next_beans = board.next_beans
 
-        new_move = board.next_beans is not None and \
-                    self.next_beans is not None and \
-                    self.next_beans != board.next_beans
+        new_move = self._is_new_move(board)
 
         if new_move:
             self.current_beans = self.next_beans
             self.next_beans = board.next_beans
 
+        self.old_board = board
         return PlayerState(board, new_move, self.current_beans)
+
+    def _is_new_move(self, new_board):
+
+        # Check if next_beans has changed
+        if new_board.next_beans is not None and \
+                self.next_beans is not None and \
+                self.next_beans != new_board.next_beans:
+            return True
+
+        # Check if bean is falling
+        # We need this to check for a new move in case the next bean happens to
+        # be the same as the current. It happens more often than you'd think!
+        if self.old_board is not None and self.next_beans is not None:
+            if (self.old_board.board[2][11] == b' ' and \
+                new_board.board[2][11] == self.next_beans[1]) or \
+               (self.old_board.board[2][11] == b' ' and \
+                self.old_board.board[2][10] == b' ' and \
+                new_board.board[2][11] == self.next_beans[0] and \
+                new_board.board[2][10] == self.next_beans[1]):
+                    return True
+
+        return False

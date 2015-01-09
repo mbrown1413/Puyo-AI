@@ -40,7 +40,6 @@ class TestPuyoVision(unittest.TestCase):
         state = pv.get_state(board1, 5)
         self.assertTrue(state.new_move)
 
-    @unittest.expectedFailure
     def test_new_move_on_seen_falling1(self):
         """New move should be detected when new beans are seen falling."""
         pv = puyo.PuyoVision(bean_finder=MockBeanFinder())
@@ -59,7 +58,6 @@ class TestPuyoVision(unittest.TestCase):
         state = pv.get_state(board2, 5)
         self.assertFalse(state.new_move)
 
-    @unittest.expectedFailure
     def test_new_move_on_seen_falling2(self):
         """New move should be detected when new beans are seen falling."""
         pv = puyo.PuyoVision(bean_finder=MockBeanFinder())
