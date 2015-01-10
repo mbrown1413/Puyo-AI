@@ -48,14 +48,14 @@ def _validate_board(board, width, height):
                 raise ValueError('Invalid cell value "{}"'.format(cell))
 
 
-class PuyoBoard(object):
+class Board(object):
     """A single player's board of the Puyo game.
 
     The board is represented by a 2 dimensional array of beans, 6 wide and 12
     tall, stored in the `board` attribute. The origin is bottom left. Access it
     like this:
 
-        puyo_board = PuyoBoard()
+        puyo_board = Board()
         puyo_board.board[x][y]
 
     Each cell is one of the following ASCII characters:
@@ -110,7 +110,7 @@ class PuyoBoard(object):
         self.game_over = False
 
     def copy(self):
-        return PuyoBoard(self.board, self.next_beans)
+        return Board(self.board, self.next_beans)
 
     def draw(self):
         """Return an image representing the puyo board."""

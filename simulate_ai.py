@@ -41,7 +41,7 @@ def main():
         parser.error("Nuisance probability (-n, --nuisance) must be between "
             "0 and 1.")
 
-    board = puyo.PuyoBoard(next_beans=random_next_beans())
+    board = puyo.Board(next_beans=random_next_beans())
     ai = puyo.AI_REGISTRY[args.ai]()
 
     print("Keys:")

@@ -17,7 +17,7 @@ def board_from_strs(rows, next_beans=None):
 
     board = [[rows[11-y][x] for y in range(12)]
                             for x in range(6)]
-    return puyo.PuyoBoard(board, next_beans)
+    return puyo.Board(board, next_beans)
 
 
 class TestBeanFinder(unittest.TestCase):

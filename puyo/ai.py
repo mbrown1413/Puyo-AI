@@ -1,6 +1,6 @@
-"""PuyoAI and subclasses, which determine what moves to make in a Puyo game.
+"""AI and subclasses, which determine what moves to make in a Puyo game.
 
-All AIs subclass from the PuyoAI class and define a `get_move` method that
+All AIs subclass from the AI class and define a `get_move` method that
 determines the next move that is made. To make an AI available, add it to
 `puyo.AI_REGISTRY` defined in "puyo/__init__.py".
 
@@ -10,14 +10,14 @@ import random
 import itertools
 
 
-class PuyoAI(object):
+class AI(object):
     """Abstract base AI class."""
 
     def get_move(self, board, beans):
         """Determine the next move to make.
 
         Args:
-            board: The current state of the game as a PuyoBoard object.
+            board: The current state of the game as a Board object.
                 `board.next_beans` is a pair of beans that represents not the
                 current beans that are dropping, but the next pair that will
                 drop, or None if it is unknown.
@@ -26,10 +26,10 @@ class PuyoAI(object):
 
         Returns:
             A move as a `(position, rotation)` tuple. See the docs for
-            `puyo.PuyoBoard.make_move()` for exactly how moves are defined by a
+            `puyo.Board.make_move()` for exactly how moves are defined by a
             position and rotation.
 
-        Note that the user of a PuyoAI subclass is allowed to call this
+        Note that the user of an AI subclass is allowed to call this
         function without actually performing the returned move. Don't keep
         state from one call to the next that makes this assumption.
 
@@ -38,7 +38,7 @@ class PuyoAI(object):
                                   "subclass.")
 
 
-class RandomAI(PuyoAI):
+class RandomAI(AI):
     """AI that makes completely random moves."""
 
     def get_move(self, board, beans):
@@ -46,8 +46,8 @@ class RandomAI(PuyoAI):
         return random.choice(list(possible_moves))
 
 
-class ScoreBasedAI(PuyoAI):
-    """Abstract class for a PuyoAI that works by scoring each possible move."""
+class ScoreBasedAI(AI):
+    """Abstract class for an AI that works by scoring each possible move."""
 
     def get_move(self, board, beans):
         score_func = lambda move: self.score_move(board.copy(), beans, *move)

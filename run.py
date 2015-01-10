@@ -45,7 +45,7 @@ def main():
         sys.exit(1)
 
     #TODO: Make screen offset configurable
-    vision = puyo.PuyoVision(player=1)
+    vision = puyo.Vision(player=1)
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
 

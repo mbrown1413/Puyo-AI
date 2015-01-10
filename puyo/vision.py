@@ -7,12 +7,12 @@ from puyo import BeanFinder
 # The state of a single player's half of the game.
 #
 # Items:
-#   board: The current board state as a PuyoBoard object.
+#   board: The current board state as a Board object.
 #   new_move: Did a bean just start dropping? True of False
 PlayerState = namedtuple("PlayerState", "board new_move current_beans")
 
 
-class PuyoVision(object):
+class Vision(object):
     """Keeps track of the game state of a single player over time.
 
     Internally, the `BeanFinder` class is used to get the state of each frame.

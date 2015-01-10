@@ -4,10 +4,10 @@ import unittest
 import puyo
 
 
-class TestPuyoBoard(unittest.TestCase):
+class TestBoard(unittest.TestCase):
 
     def make_board(self, positions, colors):
-        b = puyo.PuyoBoard()
+        b = puyo.Board()
         assert len(positions) == len(colors)
         b.drop_beans(positions, colors)
         return b
@@ -20,7 +20,7 @@ class TestPuyoBoard(unittest.TestCase):
         #
         # First, beans are dropped at the corresponding bean positions with
         # the given colors given in the first item of the tuple. Then
-        # `PuyoBoard.can_make_move()` is called with the position and rotation
+        # `Board.can_make_move()` is called with the position and rotation
         # given. The expected result is then compared with the actual result.
         tests = []
 
