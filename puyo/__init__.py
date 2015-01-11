@@ -1,3 +1,4 @@
+from puyo.driver import Driver
 from puyo.board import Board
 from puyo.beanfinder import BeanFinder
 from puyo.gccontrol import GamecubeController

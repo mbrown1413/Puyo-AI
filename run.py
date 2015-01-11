@@ -46,12 +46,11 @@ def main():
 
     #TODO: Make screen offset configurable
     vision = puyo.Vision(player=1)
+    controller = puyo.GamecubeController(args.gc_dev)
+    driver = puyo.Driver(controller, args.ai, vision)
+
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
-
-    ai = puyo.AI_REGISTRY[args.ai]()
-    controller = puyo.GamecubeController(args.gc_dev)
-
     while True:
 
         was_read, img = video.read()
@@ -62,12 +61,8 @@ def main():
             continue
         cv2.imshow("Frame", img)
 
-        state = vision.get_state(img)
+        state = driver.step(img)
         cv2.imshow("Grid", state.board.draw())
-
-        if state.new_move:
-            pos, rot = ai.get_move(state.board.copy(), state.current_beans)
-            controller.puyo_move(pos, rot)
 
         key = cv2.waitKey(10) % 256
         if key == 27:  # Escape
