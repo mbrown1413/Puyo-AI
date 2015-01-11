@@ -50,7 +50,7 @@ def main():
     cv2.namedWindow("Grid")
 
     ai = puyo.AI_REGISTRY[args.ai]()
-    controller = puyo.GamecubeControl(args.gc_dev)
+    controller = puyo.GamecubeController(args.gc_dev)
 
     while True:
 

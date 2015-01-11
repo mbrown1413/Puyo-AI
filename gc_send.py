@@ -3,7 +3,7 @@
 Sends a command to the Arduino controlling the Gamecube.
 """
 
-from puyo import GamecubeControl
+from puyo import GamecubeController
 
 def main():
     import argparse
@@ -17,7 +17,7 @@ def main():
         "the piece clockwise.")
     args = parser.parse_args()
 
-    controller = GamecubeControl(args.gc_dev)
+    controller = GamecubeController(args.gc_dev)
     controller.puyo_move(args.position, args.rotation)
 
 if __name__ == "__main__":
