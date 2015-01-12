@@ -23,7 +23,7 @@ def board_from_strs(rows, next_beans=None):
 class TestBeanFinder(unittest.TestCase):
 
     def assertBoardEquals(self, board1, board2):
-        self.assertEquals(board1.board, board2.board)
+        self.assertEquals(board1.board.tolist(), board2.board.tolist())
         self.assertEquals(board1.next_beans, board2.next_beans)
 
     def assertImageMatchesBoard(self, img_filename, board):

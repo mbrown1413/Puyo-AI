@@ -1,6 +1,5 @@
 
 import itertools
-from copy import deepcopy
 from collections import namedtuple
 
 import numpy
@@ -96,11 +95,11 @@ class Board(object):
         """
         if board is None:
             #TODO: This should really be a numpy array
-            self.board = [[b' ' for y in range(12)]
-                                 for x in range(6)]
+            self.board = numpy.array([[b' ' for y in range(12)]
+                                            for x in range(6)], dtype="|S1")
         else:
             _validate_board(board, 6, 12)
-            self.board = deepcopy(board)
+            self.board = numpy.array(board, dtype="|S1")
 
         if next_beans is not None:
             assert len(next_beans) == 2
