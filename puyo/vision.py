@@ -63,7 +63,7 @@ class Vision(object):
         if self.next_beans is None:
             self.next_beans = board.next_beans
 
-        new_move = self._is_new_move(board)
+        board, new_move = self._is_new_move(self.old_board, board)
 
         if new_move:
             self.current_beans = self.next_beans
@@ -72,24 +72,34 @@ class Vision(object):
         self.old_board = board
         return PlayerState(board, new_move, self.current_beans)
 
-    def _is_new_move(self, new_board):
+    def _is_new_move(self, old_board, new_board):
 
         # Check if next_beans has changed
         if new_board.next_beans is not None and \
                 self.next_beans is not None and \
                 self.next_beans != new_board.next_beans:
-            return True
+
+            if old_board.board[2][11] == b' ':
+                new_board.board[2][11] = b' '
+            return new_board, True
 
         # Check if bean is falling
         # We need this to check for a new move in case the next bean happens to
         # be the same as the current. It happens more often than you'd think!
-        if self.old_board is not None and self.next_beans is not None:
-            if (self.old_board.board[2][11] == b' ' and \
-                new_board.board[2][11] == self.next_beans[1]) or \
-               (self.old_board.board[2][11] == b' ' and \
-                self.old_board.board[2][10] == b' ' and \
-                new_board.board[2][11] == self.next_beans[0] and \
-                new_board.board[2][10] == self.next_beans[1]):
-                    return True
+        if old_board is not None and self.next_beans is not None:
+            if (old_board.board[2][11] == b' ' and
+                new_board.board[2][11] == self.next_beans[1]):
 
-        return False
+                    new_board.board[2][11] = b' '
+                    return new_board, True
+
+            elif (old_board.board[2][11] == b' ' and
+                  old_board.board[2][10] == b' ' and
+                  new_board.board[2][11] == self.next_beans[0] and
+                  new_board.board[2][10] == self.next_beans[1]):
+
+                    new_board.board[2][11] = b' '
+                    new_board.board[2][10] = b' '
+                    return new_board, True
+
+        return new_board, False
