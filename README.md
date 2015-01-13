@@ -91,6 +91,6 @@ each major component:
 Milestones:
 
  1. ~~Simple AI controlling the game~~
- 1. AI that can beat the early opponents
+ 1. ~~AI that can beat the early opponents~~
  1. AI that can beat me (I'm not that good)
  1. AI that can beat the final boss, Dr. Robotnik
