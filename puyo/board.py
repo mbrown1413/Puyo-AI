@@ -1,4 +1,5 @@
 
+import os
 import itertools
 from collections import namedtuple
 
@@ -33,6 +34,19 @@ COLOR_BONUS_TABLE = (0, 0, 3, 6, 12, 24)
 GROUP_BONUS_TABLE = (0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10)
 
 Combo = namedtuple("Combo", "score n_beans length")
+
+
+import ctypes
+LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
+libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
+libpuyo.board_eliminate_beans.argtypes = [
+    ctypes.POINTER(ctypes.c_char),   # board
+    ctypes.POINTER(ctypes.c_int),  # strides
+    ctypes.POINTER(ctypes.c_int),  # n_beans_out
+    ctypes.POINTER(ctypes.c_int),  # n_colors_eliminated_out
+    ctypes.POINTER(ctypes.c_int),  # group_bonus_out
+]
+
 
 def _validate_board(board, width, height):
     if len(board) != width:
@@ -77,7 +91,7 @@ class Board(object):
 
     """
 
-    def __init__(self, board=None, next_beans=None):
+    def __init__(self, board=None, next_beans=None, c_accelerated=True):
         """
         If `board` is given, it should be an length 6 array where each item is
         a 12 length array. Create one like this:
@@ -106,6 +120,7 @@ class Board(object):
             for bean in next_beans:
                 assert bean in (b'r', b'g', b'b', b'y', b'p')
         self.next_beans = next_beans
+        self.c_accelerated = c_accelerated
         self.game_over = False
 
     def copy(self):
@@ -167,6 +182,8 @@ class Board(object):
             if n_beans == 0:
                 break
 
+            self._do_gravity()
+
             # Calculate Score
             # Based on: http://puyonexus.net/wiki/Scoring
             if i >= len(CHAIN_POWER_TABLE):
@@ -180,8 +197,6 @@ class Board(object):
 
             total_score += score
             total_n_beans += n_beans
-
-            self._do_gravity()
 
         return Combo(total_score, total_n_beans, i)
 
@@ -307,6 +322,25 @@ class Board(object):
                 break
 
     def _eliminate_beans(self):
+        if self.c_accelerated:
+            return self._eliminate_beans_c()
+        else:
+            return self._eliminate_beans_py()
+
+    def _eliminate_beans_c(self):
+        n_beans = ctypes.c_int()
+        n_colors_eliminated = ctypes.c_int()
+        group_bonus = ctypes.c_int()
+        libpuyo.board_eliminate_beans(
+            self.board.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
+            self.board.ctypes.strides_as(ctypes.c_int),
+            ctypes.pointer(n_beans),
+            ctypes.pointer(n_colors_eliminated),
+            ctypes.pointer(group_bonus)
+        )
+        return n_beans.value, n_colors_eliminated.value, group_bonus.value
+
+    def _eliminate_beans_py(self):
 
         def eliminate_if_black_bean(x, y):
             if x < 0 or x > 5 or y < 0 or y > 11:
@@ -321,6 +355,8 @@ class Board(object):
         group_bonus = 0
         for x in range(6):
             for y in range(12):
+                if self.board[x][y] == b' ' or self.board[x][y] == b'k':
+                    continue
                 coordinates = self.get_connected(x, y)
                 if len(coordinates) < 4:
                     continue
