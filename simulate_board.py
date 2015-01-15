@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 A simple interface for testing the Board class.
 
