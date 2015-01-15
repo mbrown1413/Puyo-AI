@@ -33,7 +33,7 @@ CHAIN_POWER_TABLE = (0, 8, 16, 32, 64, 128, 256, 512, 999)
 COLOR_BONUS_TABLE = (0, 0, 3, 6, 12, 24)
 GROUP_BONUS_TABLE = (0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10)
 
-Combo = namedtuple("Combo", "score n_beans length")
+Combo = namedtuple("Combo", "score n_beans length game_over")
 
 
 import ctypes
@@ -116,7 +116,6 @@ class Board(object):
                 assert bean in (b'r', b'g', b'b', b'y', b'p')
         self.next_beans = next_beans
         self.c_accelerated = c_accelerated
-        self.game_over = False
 
     def copy(self):
         return Board(self.board, self.next_beans)
@@ -193,7 +192,7 @@ class Board(object):
             total_score += score
             total_n_beans += n_beans
 
-        return Combo(total_score, total_n_beans, i)
+        return Combo(total_score, total_n_beans, i, False)
 
     def drop_bean(self, x, color):
         """Shortcut for `drop_beans([x], [color])`."""
@@ -239,8 +238,7 @@ class Board(object):
         if position == 2 and rotation == 0 and self.board[2][11] != b' ':
             # This column is filled, so it's the only valid move, and results
             # in a game over.
-            self.game_over = True
-            return Combo(0, 0, 0)
+            return Combo(0, 0, 0, True)
 
         if rotation > 1:
             rotation -= 2
@@ -254,8 +252,6 @@ class Board(object):
 
     def can_make_move(self, position, rotation):
         """Return True if the move can be made, False otherwise."""
-        if self.game_over:
-            return False
 
         # Is this even a valid move?
         assert rotation in range(4)
@@ -293,16 +289,6 @@ class Board(object):
             for position in range(5 if rotation%2 else 6):
                 if self.can_make_move(position, rotation):
                     yield position, rotation
-
-    def is_game_over(self):
-        """Has the game been lost?
-
-        The game is lost when the third column is filled and the player is
-        forced to drop the next pair of beans above the board. This happens in
-        `make_move()`.
-
-        """
-        return self.game_over
 
     def _drop(self, x, color):
         if color not in VALID_CELLS:

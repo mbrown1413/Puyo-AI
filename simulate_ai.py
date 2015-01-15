@@ -48,6 +48,8 @@ def main():
     print("  Space: Make move")
     print("  Escape: Quit")
 
+    last_board = None
+    game_over = False
     cv2.namedWindow("Puyo Board")
     while True:
         cv2.imshow("Puyo Board", board.draw())
@@ -59,7 +61,7 @@ def main():
 
         elif key == ord(' '):
 
-            if not board.is_game_over():
+            if not game_over:
                 last_board = board.copy()
                 current_beans = board.next_beans
                 board.next_beans = random_next_beans()
@@ -67,6 +69,9 @@ def main():
                 #print current_beans, position, rotation
                 if board.can_make_move(position, rotation):
                     combo = board.make_move(current_beans, position, rotation)
+                    if combo.game_over:
+                        print "Game Over"
+                        game_over = True
                     print_combo(combo)
                 else:
                     print "Invalid Move:", position, rotation
@@ -74,11 +79,12 @@ def main():
                 if random.uniform(0, 1) < args.nuisance_probability:
                     board.drop_black_bean(random.randint(0, 5))
 
-            if board.is_game_over():
+            if game_over:
                 print "Game Over"
 
         elif key == ord('u'):
             board = last_board
+            game_over = False
 
 if __name__ == "__main__":
     main()
