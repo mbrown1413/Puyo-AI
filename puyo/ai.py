@@ -84,7 +84,6 @@ class SimpleGreedyAI(ScoreBasedAI):
     """
 
     def score_move(self, board, beans, pos, rot):
-        board = board.copy()
         combo = board.make_move(beans, pos, rot)
         value = 0
 
@@ -109,7 +108,6 @@ class SimpleComboAI(ScoreBasedAI):
     """
 
     def score_move(self, board, beans, pos, rot):
-        board = board.copy()
         combo = board.make_move(beans, pos, rot)
         value = 0
 
