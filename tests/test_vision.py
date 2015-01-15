@@ -3,6 +3,8 @@ import unittest
 
 import puyo
 
+from helper import PuyoTestCase
+
 
 class MockBeanFinder(puyo.BeanFinder):
     """
@@ -17,7 +19,7 @@ class MockBeanFinder(puyo.BeanFinder):
         return board
 
 
-class TestVision(unittest.TestCase):
+class TestVision(PuyoTestCase):
 
     def test_new_move_on_next_bean_change(self):
         """New move should be detected when the next bean changes."""

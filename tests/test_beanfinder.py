@@ -6,25 +6,13 @@ import cv2
 
 import puyo
 
+from helper import board_from_strs, PuyoTestCase
+
 
 TEST_IMG_FOLDER = os.path.join(os.path.dirname(__file__), "img")
 
 
-def board_from_strs(rows, next_beans=None):
-
-    for i in range(12-len(rows)):
-        rows.insert(0, b"      ")
-
-    board = [[rows[11-y][x] for y in range(12)]
-                            for x in range(6)]
-    return puyo.Board(board, next_beans)
-
-
-class TestBeanFinder(unittest.TestCase):
-
-    def assertBoardEquals(self, board1, board2):
-        self.assertEquals(board1.board.tolist(), board2.board.tolist())
-        self.assertEquals(board1.next_beans, board2.next_beans)
+class TestBeanFinder(PuyoTestCase):
 
     def assertImageMatchesBoard(self, img_filename, board):
         bean_finder = puyo.BeanFinder((38, 13), 1)
