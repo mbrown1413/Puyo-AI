@@ -48,14 +48,9 @@ libpuyo.board_eliminate_beans.argtypes = [
 ]
 
 
-def _validate_board(board, width, height):
-    if len(board) != width:
-        raise ValueError("Initial board given has wrong dimensions: "
-                         "{}".format(board))
+def _validate_board(board):
+    assert board.shape == (6, 12)
     for col in board:
-        if len(col) != height:
-            raise ValueError("Initial board given has wrong dimensions: "
-                             "{}".format(board))
         for cell in col:
             if cell not in VALID_CELLS:
                 raise ValueError('Invalid cell value "{}"'.format(cell))
@@ -112,8 +107,8 @@ class Board(object):
             self.board = numpy.array([[b' ' for y in range(12)]
                                             for x in range(6)], dtype="|S1")
         else:
-            _validate_board(board, 6, 12)
             self.board = numpy.array(board, dtype="|S1")
+            _validate_board(self.board)
 
         if next_beans is not None:
             assert len(next_beans) == 2
