@@ -32,7 +32,7 @@ class Vision(object):
                 is given, this argument should be None (default).
         """
         if bean_finder is None:
-            assert player in (None, 0, 1)
+            assert player in (None, 1, 2)
             if player is None:
                 player = 1
             bean_finder = BeanFinder((38, 13), player)

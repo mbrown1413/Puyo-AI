@@ -11,7 +11,9 @@ CELL_CROP_SIZE = (32, 32)
 CELL_BORDER = 4
 
 PLAYER1_BOARD_OFFSET = (35, 35)
+PLAYER2_BOARD_OFFSET = (419, 35)
 PLAYER1_NEXT_BEAN_OFFSETS = ((258, 96), (258, 127))
+PLAYER2_NEXT_BEAN_OFFSETS = ((354, 96), (354, 127))
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates/")
 BLACK_EYE_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "black_eye.png")
@@ -60,21 +62,24 @@ class BeanFinder(object):
 
     def __init__(self, screen_offset, player=1):
         if player == 1:
-            self.board_offset = (
-                screen_offset[0] + PLAYER1_BOARD_OFFSET[0],
-                screen_offset[1] + PLAYER1_BOARD_OFFSET[1],
-            )
-            self.next_bean_offsets = (
-                (screen_offset[0] + PLAYER1_NEXT_BEAN_OFFSETS[0][0],
-                 screen_offset[1] + PLAYER1_NEXT_BEAN_OFFSETS[0][1]),
-                (screen_offset[0] + PLAYER1_NEXT_BEAN_OFFSETS[1][0],
-                 screen_offset[1] + PLAYER1_NEXT_BEAN_OFFSETS[1][1])
-            )
+            board_offset = PLAYER1_BOARD_OFFSET
+            next_bean_offsets = PLAYER1_NEXT_BEAN_OFFSETS
         elif player == 2:
-            raise NotImplementedError("Player2 hasn't been implemented )=")
+            board_offset = PLAYER2_BOARD_OFFSET
+            next_bean_offsets = PLAYER2_NEXT_BEAN_OFFSETS
         else:
             raise ValueError('Invalid player: "{}", '
                               'must be either 1 or 2.'.format(player))
+        self.board_offset = (
+            screen_offset[0] + board_offset[0],
+            screen_offset[1] + board_offset[1],
+        )
+        self.next_bean_offsets = (
+            (screen_offset[0] + next_bean_offsets[0][0],
+                screen_offset[1] + next_bean_offsets[0][1]),
+            (screen_offset[0] + next_bean_offsets[1][0],
+                screen_offset[1] + next_bean_offsets[1][1])
+        )
 
         self.black_eye_template = cv2.imread(BLACK_EYE_TEMPLATE_FILENAME)
 

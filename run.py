@@ -36,6 +36,9 @@ def main():
     parser.add_argument("-a", "--ai", choices=ai_names,
         default=puyo.DEFAULT_AI_NAME, help="AI to use. Choose one of: {} "
         "(default: {})".format(ai_names, puyo.DEFAULT_AI_NAME))
+    parser.add_argument("--player2", "-2", dest="player", const=2,
+        action="store_const", help="Play as player 2. Plays on the right side "
+        "of the screen.")
     args = parser.parse_args()
 
     video = open_video(args.video)
@@ -45,7 +48,7 @@ def main():
         sys.exit(1)
 
     #TODO: Make screen offset configurable
-    vision = puyo.Vision(player=1)
+    vision = puyo.Vision(player=args.player)
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, vision)
 
