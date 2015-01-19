@@ -1,7 +1,11 @@
 
 from collections import namedtuple
+from time import time
 
 from puyo import BeanFinder
+
+
+MIN_NEW_MOVE_WAIT_TIME = 0.3
 
 
 # The state of a single player's half of the game.
@@ -22,7 +26,7 @@ class Vision(object):
 
     """
 
-    def __init__(self, bean_finder=None, player=None):
+    def __init__(self, bean_finder=None, player=None, timing_scheme="absolute"):
         """
         Args:
             bean_finder: A `BeanFinder` instance, or None if one should be
@@ -30,6 +34,9 @@ class Vision(object):
             player: If `bean_finder` is None, this is used to construct a
                 `BeanFinder` object with the intended player. If `bean_finder`
                 is given, this argument should be None (default).
+            timing_scheme: "relative" or "absolute". If "relative", `dt` must
+                be given to each call of `get_state`, otherwise `dt` cannot be
+                given.
         """
         if bean_finder is None:
             assert player in (None, 1, 2)
@@ -40,10 +47,22 @@ class Vision(object):
             assert player is None
         self.bean_finder = bean_finder
 
+        if timing_scheme == "relative":
+            self.relative_timing = True
+            self.prev_time = float('-inf')
+            self.current_time = 0
+        elif timing_scheme == "absolute":
+            self.relative_timing = False
+            self.prev_time = float('-inf')
+            self.current_time = float('-inf')
+        else:
+            raise ValueError('`timing_scheme` must be "relative" or "absolute"')
+
         self.old_board = None  # Board from the previous frame
         self.next_beans = None  # Beans next to fall
         self.current_beans = None  # Beans currently falling
         self.beans_falling = False
+        self.last_new_move_time = float('-inf')
 
     def get_state(self, img, dt=None):
         """Return a PlayerState object representing the current player state.
@@ -51,14 +70,21 @@ class Vision(object):
         Args:
             img: Current video frame of the game.
             dt: The time, in seconds, since the last image given to
-                `set_state`. The first time `get_state` is called, this will be
-                ignored. If it is left as None, the time will default to the
-                time since the last call from `get_state`.
+                `set_state`. If `timing_scheme` was set to "absolute" this
+                parameter cannot be used. If `timing_scheme is "relative", it
+                must be used.
 
         Returns: PlayerState object representing the state of the player's half
             of the game
 
         """
+        if self.relative_timing:
+            assert dt is not None
+            self.prev_time, self.current_time = self.current_time, self.current_time + dt
+        else:
+            assert dt is None
+            self.prev_time, self.current_time = self.current_time, time()
+
         board = self.bean_finder.get_board(img)
 
         if self.next_beans is None:
@@ -66,10 +92,14 @@ class Vision(object):
 
         board, new_move = self._is_new_move(self.old_board, board)
 
+        if new_move and self.current_time - self.last_new_move_time < MIN_NEW_MOVE_WAIT_TIME:
+            new_move = False
+
         if new_move:
             self.current_beans = self.next_beans
             self.next_beans = board.next_beans
             self.beans_falling = True
+            self.last_new_move_time = self.current_time
 
         self.old_board = board
         return PlayerState(board, new_move, self.current_beans)
