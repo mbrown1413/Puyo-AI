@@ -133,14 +133,14 @@ class Vision(object):
             # case the next bean happens to be the same as the current. It
             # happens more often than you'd think!
             if old_board is not None and self.next_beans is not None:
-                if (old_board.board[2][11] == b' ' and
+                if (old_board.board[2][11] in (b' ', b'k') and
                     new_board.board[2][11] == self.next_beans[1]):
 
                         new_board.board[2][11] = b' '
                         return new_board, True
 
-                elif (old_board.board[2][11] == b' ' and
-                    old_board.board[2][10] == b' ' and
+                elif (old_board.board[2][11] in (b' ', b'k') and
+                    old_board.board[2][10] in (b' ', b'k') and
                     new_board.board[2][11] == self.next_beans[0] and
                     new_board.board[2][10] == self.next_beans[1]):
 
