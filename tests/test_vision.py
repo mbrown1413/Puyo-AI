@@ -79,7 +79,7 @@ class TestVision(PuyoTestCase):
         state = vision.get_state(board2, 5)
         self.assertFalse(state.new_move)
 
-    def test_no_new_move_on_wrong_colors(self):
+    def test_no_new_move_on_wrong_colors1(self):
         """No new move should be detected when colors don't match the next bean."""
         vision = puyo.Vision(bean_finder=MockBeanFinder(), timing_scheme="relative")
         board = puyo.Board(next_beans=(b'r', b'g'))
@@ -93,16 +93,32 @@ class TestVision(PuyoTestCase):
         state = vision.get_state(tmp_board, 5)
         self.assertFalse(state.new_move)
 
-        # Neither should red alone, since green falls first
-        tmp_board = board.copy()
-        tmp_board.board[2][11] = b'r'
-        state = vision.get_state(tmp_board, 5)
+    def test_no_new_move_on_wrong_colors2(self):
+        """No new move should be detected when colors don't match the next bean."""
+        vision = puyo.Vision(bean_finder=MockBeanFinder(), timing_scheme="relative")
+        board = puyo.Board(next_beans=(b'r', b'g'))
+
+        state = vision.get_state(board, 5)
         self.assertFalse(state.new_move)
 
-        # Neither should green then red, since red should be on top
+        # (Green, red) should not trigger new move, since red should be on top
         tmp_board = board.copy()
         tmp_board.board[2][11] = b'g'
         tmp_board.board[2][10] = b'r'
+        state = vision.get_state(tmp_board, 5)
+        self.assertFalse(state.new_move)
+
+    def test_no_new_move_on_wrong_colors3(self):
+        """No new move should be detected when colors don't match the next bean."""
+        vision = puyo.Vision(bean_finder=MockBeanFinder(), timing_scheme="relative")
+        board = puyo.Board(next_beans=(b'r', b'g'))
+
+        state = vision.get_state(board, 5)
+        self.assertFalse(state.new_move)
+
+        # Red should not trigger new move, since green falls first
+        tmp_board = board.copy()
+        tmp_board.board[2][11] = b'r'
         state = vision.get_state(tmp_board, 5)
         self.assertFalse(state.new_move)
 
