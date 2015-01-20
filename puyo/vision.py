@@ -90,6 +90,13 @@ class Vision(object):
         if self.next_beans is None:
             self.next_beans = board.next_beans
 
+        for x in range(0, 6):
+            for y in range(1, 12):
+                if x == 2 and (y == 11 or y == 10):
+                    continue
+                if board.board[x][y] != b' ' and board.board[x][y-1] == b' ':
+                    return PlayerState(board, False, self.current_beans)
+
         board, new_move = self._is_new_move(self.old_board, board)
 
         if new_move and self.current_time - self.last_new_move_time < MIN_NEW_MOVE_WAIT_TIME:
