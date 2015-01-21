@@ -134,7 +134,8 @@ class Vision(object):
             # happens more often than you'd think!
             if old_board is not None and self.next_beans is not None:
                 if (old_board.board[2][11] in (b' ', b'k') and
-                    new_board.board[2][11] == self.next_beans[1]):
+                    new_board.board[2][11] == self.next_beans[1] and
+                    new_board.board[2][10] == b' '):
 
                         new_board.board[2][11] = b' '
                         return new_board, True
