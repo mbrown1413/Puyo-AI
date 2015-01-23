@@ -39,6 +39,8 @@ def main():
     parser.add_argument("--player2", "-2", dest="player", const=2,
         action="store_const", help="Play as player 2. Plays on the right side "
         "of the screen.")
+    parser.add_argument("--video-out", "-o", default=None,
+        help="AVI file to write video to.")
     args = parser.parse_args()
 
     video = open_video(args.video)
@@ -52,6 +54,7 @@ def main():
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, vision)
 
+    video_writer = None
     cv2.namedWindow("Frame")
     cv2.namedWindow("Grid")
     while True:
@@ -67,9 +70,18 @@ def main():
         state = driver.step(img)
         cv2.imshow("Grid", state.board.draw())
 
+        if args.video_out:
+            if video_writer is None:
+                fourcc = cv2.cv.CV_FOURCC(*"I420")
+                video_writer = cv2.VideoWriter(args.video_out, fourcc, 25, (img.shape[1], img.shape[0]), True)
+            video_writer.write(img)
+
         key = cv2.waitKey(10) % 256
         if key == 27:  # Escape
             break
+
+    if video_writer is not None:
+        video_writer.release()
 
 
 if __name__ == "__main__":
