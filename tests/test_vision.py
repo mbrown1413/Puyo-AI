@@ -3,7 +3,7 @@ import unittest
 
 import puyo
 
-from helper import PuyoTestCase
+from helper import PuyoTestCase, read_board_recording
 
 
 class MockBeanFinder(puyo.BeanFinder):
@@ -134,6 +134,29 @@ class TestVision(PuyoTestCase):
         board2.board[3][11] = b'g'
         state = vision.get_state(board2, 5)
         self.assertFalse(state.new_move)
+
+
+class TestVisionWithRealData(PuyoTestCase):
+    """Testing on recorded (board, timestamp) tuple data."""
+
+    def test_new_move(self):
+        """New move detected exactly when it should be."""
+        new_move_frames = set([
+            150, 211, 262, 324, 419, 513, 604, 698, 813, 902, 1028, 1145, 1245,
+            1358, 1431, 1527, 1616, 1670, 1805
+        ])
+
+        vision = puyo.Vision(bean_finder=MockBeanFinder(), timing_scheme="relative")
+
+        data = read_board_recording("board_recording1.pickle")
+        last_time = 0
+        for i, (board, t) in enumerate(data):
+            state = vision.get_state(board, t - last_time)
+            if state.new_move:
+                self.assertIn(i, new_move_frames, "new_move false positive: frame {}".format(i))
+            else:
+                self.assertNotIn(i, new_move_frames, "new_move false negative: frame {}".format(i))
+            last_time = t
 
 
 if __name__ == "__main__":
