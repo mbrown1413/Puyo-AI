@@ -41,6 +41,8 @@ details on usage.
         test the board mechanics by placing one piece at a time.
  * `recognize_board.py` - For testing the vision processing. Takes video input
         and shows the reconstructed game state.
+ * `playback_board.py` - Playback a board recording file produced by
+        `recognize_board.py`'s `-o` option.
 
 
 How it Works
