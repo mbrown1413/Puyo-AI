@@ -72,7 +72,7 @@ class TestBeanFinder(PuyoTestCase):
             b"r ypr ",
             b"rryyrg",
             b"gypryg",
-        ], next_beans=(b'p', b'y'))
+        ], next_beans=(b'y', b'p'))
         self.assertImageMatchesBoard("beanfinder_yellow_similar_to_green.png", board)
 
 
