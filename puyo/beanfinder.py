@@ -1,9 +1,11 @@
 
+from __future__ import division
 import os
 from math import sqrt
 from collections import defaultdict
 
 import cv2
+import numpy
 
 from puyo import Board
 
@@ -18,38 +20,42 @@ PLAYER2_NEXT_BEAN_OFFSETS = ((354, 96), (354, 127))
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates/")
 BLACK_EYE_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "black_eye.png")
 
+# Average hue histograms for each color, used to match colors.
+# See `vision_training/` for steps to reproduce this data.
+HUE_HISTOGRAMS = {
+    b' ': numpy.array([0.02119149952244509, 0.68812679083094497,
+        4.5709467526265533, 3.6332975167144221, 2.1353420487106014,
+        1.7077811604584523, 2.0388610315186249, 0.20415472779369639,
+        0.00014923591212989497, 0.00014923591212989497, 0.0, 0.0, 0.0, 0.0,
+        0.0]),
+    b'b': numpy.array([0.0022163120567375888, 0.0099734042553191477,
+        0.12965425531914893, 1.0261524822695034, 0.97185283687943269,
+        5.4222074468085086, 7.4324024822695041, 0.0055407801418439736, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    b'g': numpy.array([0.0021258503401360546, 0.06164965986394557,
+        1.6937712585034013, 12.008928571428571, 0.74564200680272119,
+        0.23384353741496597, 0.22108843537414968, 0.032950680272108852, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    b'p': numpy.array([0.066287878787878785, 0.1259469696969697,
+        0.30160984848484845, 0.32054924242424238, 0.14962121212121215,
+        0.11931818181818174, 0.18655303030303036, 3.2831439393939399,
+        10.360795454545457, 0.07670454545454547, 0.0094696969696969717, 0.0,
+        0.0, 0.0, 0.0]),
+    b'r': numpy.array([5.2842514124293771, 0.32750706214689262,
+        0.4087217514124295, 0.25688559322033905, 0.14256709039548027,
+        0.090925141242937824, 0.08121468926553671, 0.079449152542372892,
+        0.058262711864406777, 0.6320621468926555, 7.6381532485875701, 0.0, 0.0,
+        0.0, 0.0]),
+    b'y': numpy.array([3.2574728260869557, 10.179272342995169,
+        0.77898550724637683, 0.18493357487922707, 0.11096014492753625,
+        0.041515700483091757, 0.063405797101449279, 0.020380434782608696,
+        0.0022644927536231889, 0.030193236714975855, 0.33061594202898553, 0.0,
+        0.0, 0.0, 0.0]),
+}
+HIST_N_BINS = len(HUE_HISTOGRAMS[b'r'])
 
-import ctypes
-LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
-libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
-libpuyo.get_color_votes.argtypes = [ctypes.POINTER(ctypes.c_char), # pixels
-                                    ctypes.c_int,                  # n_pixels
-                                    ctypes.POINTER(ctypes.c_int),  # strides
-                                    ctypes.POINTER(ctypes.c_int)]  # votes_out
-
-def get_color_votes(hsv_img):
-    """Given an hsv image, returns a dictionary mapping colors to votes. The
-    highest vote is probably the bean color for the given image.
-
-    Black (nussance) beans are recognized as background, since their color
-    profile is pretty much the same.
-
-    This is a small wrapper around the C function `get_color_votes`.
-    """
-    assert hsv_img.dtype == "uint8"
-    flat = hsv_img.reshape(hsv_img.shape[0]*hsv_img.shape[1], 3)
-
-    votes_type = ctypes.c_int * 6
-    votes = votes_type()
-    libpuyo.get_color_votes(
-        flat.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
-        flat.shape[0],
-        flat.ctypes.strides_as(ctypes.c_int),
-        votes
-    )
-
-    color_names = (b' ', b'r', b'g', b'b', b'y', b'p')
-    return {color_names[i]: votes[i] for i in range(6)}
+def compare_hist(hist_a, hist_b):
+    return numpy.sum((hist_a - hist_b)**2)
 
 
 class BeanFinder(object):
@@ -106,17 +112,19 @@ class BeanFinder(object):
         return next_beans
 
     def _detect_color(self, img):
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) / 255
+        hues = [p[0] for p in hsv.reshape((-1, 3))]
+        hist, _ = numpy.histogram(hues, HIST_N_BINS, (0, 1), density=True)
 
-        votes = get_color_votes(hsv)
+        closest_dist = float('inf')
+        closest_color = None
+        for color, color_hist in HUE_HISTOGRAMS.iteritems():
+            dist = compare_hist(hist, color_hist)
+            if dist < closest_dist:
+                closest_dist = dist
+                closest_color = color
 
-        # It should be rare, but possible to get no similar colors
-        if not votes:
-            return b' '
-
-        bean = max(votes.items(), key=lambda x: x[1])[0]
-
-        if bean == b' ':
+        if closest_color in (b' ', b'k'):
             # Black and background have very similar colors. Use template
             # matching on the black bean's eyes to tell the difference.
             match = cv2.matchTemplate(img,
@@ -128,7 +136,7 @@ class BeanFinder(object):
             else:
                 return b' '
         else:
-            return bean
+            return closest_color
 
     def _crop_cell(self, img, x, y, image_coordinates=False):
         """
