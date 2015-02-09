@@ -113,7 +113,7 @@ class BeanFinder(object):
 
     def _detect_color(self, img):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) / 255
-        hues = [p[0] for p in hsv.reshape((-1, 3))]
+        hues = hsv.reshape((-1, 3))[:,0]
         hist, _ = numpy.histogram(hues, HIST_N_BINS, (0, 1), density=True)
 
         closest_dist = float('inf')
