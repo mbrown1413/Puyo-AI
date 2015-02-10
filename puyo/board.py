@@ -117,6 +117,12 @@ class Board(object):
         self.next_beans = next_beans
         self.c_accelerated = c_accelerated
 
+    def __eq__(self, other):
+        if isinstance(other, Board):
+            return (self.board == other.board).all() and \
+                    self.next_beans == other.next_beans
+        return NotImplemented
+
     def copy(self):
         return Board(self.board, self.next_beans)
 
