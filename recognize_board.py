@@ -71,7 +71,7 @@ def main():
             t = time.time()
             if start_time is None:
                 start_time = t
-            if last_board is not None and (last_board.board == board.board).all():
+            if last_board is not None and board == last_board:
                 b = None
             else:
                 b = board
