@@ -63,6 +63,7 @@ class Vision(object):
         self.current_beans = None  # Beans currently falling
         self.beans_falling = False
         self.last_new_move_time = float('-inf')
+        self.frames_since_last_new_move = 0
 
     def get_state(self, img, dt=None):
         """Return a PlayerState object representing the current player state.
@@ -90,10 +91,27 @@ class Vision(object):
         if self.next_beans is None:
             self.next_beans = board.next_beans
 
+        # Fix interlacing issues with `next_beans` recognition.
+        # If 'next_beans' just changed, we might have gotten a half-changed
+        # frame due to interlacing. In this case, the last frame we returned
+        # the _wrong_ `next_beans`! Here we at least keep track of what the
+        # real next beans are if there is a misclassification due to
+        # interlacing.
+        #
+        #TODO: Consider waiting until `next_beans` has changed for two frames
+        #      before returning `new_move`=True
+        if self.frames_since_last_new_move == 0 and \
+                self.next_beans is not None and \
+                board.next_beans is not None and \
+                self.next_beans != board.next_beans:
+            self.next_beans = board.next_beans
+
+        # Ignore boards that are impossible rest.
+        # i.e. when there are blank spaces under a filled cell.
         for x in range(0, 6):
             for y in range(1, 12):
                 if x == 2 and (y == 11 or y == 10):
-                    continue
+                    continue  # Allow pieces that just started falling
                 if board.board[x][y] != b' ' and board.board[x][y-1] == b' ':
                     return PlayerState(board, False, self.current_beans)
 
@@ -107,6 +125,9 @@ class Vision(object):
             self.next_beans = board.next_beans
             self.beans_falling = True
             self.last_new_move_time = self.current_time
+            self.frames_since_last_new_move = 0
+        else:
+            self.frames_since_last_new_move += 1
 
         self.old_board = board
         return PlayerState(board, new_move, self.current_beans)
