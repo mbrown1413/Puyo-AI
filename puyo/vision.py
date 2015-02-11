@@ -140,8 +140,6 @@ class Vision(object):
             finished_falling =  self._finished_falling(old_board, new_board)
             if finished_falling:
                 self.beans_falling = False
-        if self.beans_falling:
-            return new_board, False
 
         # Check if next_beans has changed
         if new_board.next_beans is not None and \
@@ -152,6 +150,9 @@ class Vision(object):
             if old_board.board[2][11] == b' ':
                 new_board.board[2][11] = b' '
             return new_board, True
+
+        elif self.beans_falling:
+            return new_board, False
 
         else:
 
