@@ -1,6 +1,7 @@
 
 from collections import namedtuple
 from time import time
+from itertools import product
 
 from puyo import BeanFinder
 
@@ -90,6 +91,8 @@ class Vision(object):
 
         if self.next_beans is None:
             self.next_beans = board.next_beans
+        if self.old_board is None:
+            self.old_board = board
 
         # Fix interlacing issues with `next_beans` recognition.
         # If 'next_beans' just changed, we might have gotten a half-changed
@@ -106,15 +109,6 @@ class Vision(object):
                 self.next_beans != board.next_beans:
             self.next_beans = board.next_beans
 
-        # Ignore boards that are impossible rest.
-        # i.e. when there are blank spaces under a filled cell.
-        for x in range(0, 6):
-            for y in range(1, 12):
-                if x == 2 and (y == 11 or y == 10):
-                    continue  # Allow pieces that just started falling
-                if board.board[x][y] != b' ' and board.board[x][y-1] == b' ':
-                    return PlayerState(board, False, self.current_beans)
-
         board, new_move = self._is_new_move(self.old_board, board)
 
         if new_move and self.current_time - self.last_new_move_time < MIN_NEW_MOVE_WAIT_TIME:
@@ -126,26 +120,38 @@ class Vision(object):
             self.beans_falling = True
             self.last_new_move_time = self.current_time
             self.frames_since_last_new_move = 0
+            self.old_board = board
         else:
             self.frames_since_last_new_move += 1
 
-        self.old_board = board
         return PlayerState(board, new_move, self.current_beans)
 
     def _is_new_move(self, old_board, new_board):
+
+        # Ignore boards that are impossible rest.
+        # i.e. when there are blank spaces under a filled cell.
+        for x, y in product(range(6), range(1, 12)):
+            if not (x == 2 and (y == 11 or y == 10)):
+                if new_board.board[x][y] != b' ' and new_board.board[x][y-1] == b' ':
+                    return old_board, False
+
+        # If beans are still falling, wait until they're finished
+        if self.beans_falling:
+            finished_falling =  self._finished_falling(old_board, new_board)
+            if finished_falling:
+                self.beans_falling = False
+        if self.beans_falling:
+            return new_board, False
 
         # Check if next_beans has changed
         if new_board.next_beans is not None and \
                 self.next_beans is not None and \
                 self.next_beans != new_board.next_beans:
 
+            # If beans have started falling in the same frame, remove it.
             if old_board.board[2][11] == b' ':
                 new_board.board[2][11] = b' '
             return new_board, True
-
-        if self.beans_falling:
-            if new_board.board[2][11] == b' ':
-                self.beans_falling = False
 
         else:
 
@@ -154,6 +160,7 @@ class Vision(object):
             # case the next bean happens to be the same as the current. It
             # happens more often than you'd think!
             if old_board is not None and self.next_beans is not None:
+                # One bean seen at (2, 11)
                 if (old_board.board[2][11] in (b' ', b'k') and
                     new_board.board[2][11] == self.next_beans[1] and
                     new_board.board[2][10] == b' '):
@@ -161,6 +168,7 @@ class Vision(object):
                         new_board.board[2][11] = b' '
                         return new_board, True
 
+                # Both beans seen at (2, 11) and (2, 10)
                 elif (old_board.board[2][11] in (b' ', b'k') and
                     old_board.board[2][10] in (b' ', b'k') and
                     new_board.board[2][11] == self.next_beans[0] and
@@ -171,3 +179,46 @@ class Vision(object):
                         return new_board, True
 
         return new_board, False
+
+    def _finished_falling(self, old_board, new_board):
+
+        # Top row
+        # We only require one bean to be seen, since the other may be off the
+        # top of the screen.
+        for x in range(6):
+            if old_board.board[x][11] == b' ' and \
+                old_board.board[x][10] != b' ' and \
+                new_board.board[x][11] in self.current_beans:
+
+                    return True
+
+        bottom_indexes = []  # Lowest point not filled in each column
+        for x in range(6):
+            bottom_index_found = False
+            for y in range(12):
+                if old_board.board[x][y] == b' ':
+                    bottom_indexes.append(y)
+                    bottom_index_found = True
+                    break
+            if not bottom_index_found:
+                bottom_indexes.append(12)
+
+        # Vertically oriented
+        for x, bot_idx in enumerate(bottom_indexes):
+            if bot_idx >= 11:
+                continue
+            seen1 = new_board.board[x][bot_idx  ]
+            seen2 = new_board.board[x][bot_idx+1]
+            if self.current_beans in ((seen1, seen2), (seen2, seen1)):
+                return True
+
+        # Horizontally oriented
+        for x in range(5):
+            if bottom_indexes[x] == 12 or bottom_indexes[x+1] == 12:
+                continue
+            seen1 = new_board.board[x  ][bottom_indexes[x  ]]
+            seen2 = new_board.board[x+1][bottom_indexes[x+1]]
+            if self.current_beans in ((seen1, seen2), (seen2, seen1)):
+                return True
+
+        return False
