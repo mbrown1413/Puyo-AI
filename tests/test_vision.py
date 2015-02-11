@@ -139,16 +139,14 @@ class TestVision(PuyoTestCase):
 class TestVisionWithRealData(PuyoTestCase):
     """Testing on recorded (board, timestamp) tuple data."""
 
-    def test_new_move(self):
-        """New move detected exactly when it should be."""
-        new_move_frames = set([
-            150, 211, 262, 324, 419, 513, 604, 698, 813, 902, 1028, 1145, 1245,
-            1358, 1431, 1527, 1616, 1670, 1805
-        ])
-
+    def assertNewMovesMatchSet(self, recording_filename, new_move_frames):
+        """
+        Assert that the new moves are detected in the recording only when
+        specified in the set `new_move_frames`.
+        """
         vision = puyo.Vision(bean_finder=MockBeanFinder(), timing_scheme="relative")
+        data = read_board_recording(recording_filename)
 
-        data = read_board_recording("board_recording1.pickle")
         last_time = 0
         for i, (board, t) in enumerate(data):
             state = vision.get_state(board, t - last_time)
@@ -157,6 +155,28 @@ class TestVisionWithRealData(PuyoTestCase):
             else:
                 self.assertNotIn(i, new_move_frames, "new_move false negative: frame {}".format(i))
             last_time = t
+
+    def test_new_move1(self):
+        """New moves detection on a human player recording."""
+        new_move_frames = set([
+            150, 211, 262, 324, 419, 513, 604, 698, 813, 902, 1028, 1145, 1245,
+            1358, 1431, 1527, 1616, 1670, 1805
+        ])
+        self.assertNewMovesMatchSet("board_recording1.pickle", new_move_frames)
+
+    def test_new_move2(self):
+        """New moves detection on an AI player recording."""
+        new_move_frames = set([
+            40, 77, 105, 166, 212, 256, 280, 334, 363, 396, 552, 576, 608, 638,
+            674, 704, 759, 786, 814, 841, 874, 907, 935, 1060, 1102, 1130,
+            1159, 1193, 1223, 1253, 1280, 1312, 1341, 1465, 1496, 1525, 1551,
+            1580, 1612, 1642, 1673, 1700, 1733, 1760, 1786, 1815, 1841, 1882,
+            1949, 2045, 2077, 2106, 2136, 2196, 2224, 2254, 2287, 2318, 2346,
+            2371, 2584, 2614, 2637, 2653, 2671, 2689, 2709, 2766, 2803, 2831,
+            2890, 2952, 2974, 3002, 3026, 3047, 3072, 3091, 3110, 3133, 3156,
+            3176, 3211, 3228, 3238
+        ])
+        self.assertNewMovesMatchSet("board_recording2.pickle", new_move_frames)
 
 
 if __name__ == "__main__":

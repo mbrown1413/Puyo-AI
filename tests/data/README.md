@@ -8,3 +8,6 @@ it is assumed to be the previous board.
 
  * `board_recording1.pickle` - Recorded from a human playing in practice mode.
         Originally from recorded video "footage3", not included in this repo.
+ * `board_recording2.pickle` - Recording from the `SimpleComboAI` playing in
+        practice mode. Originally from recorded video "practice_ai_1" not
+        included in this repo.
