@@ -15,3 +15,7 @@ Here is the process:
    * Printed out are the average hue histograms for each color. These
      histograms can be copied to `HUE_HISTOGRAMS` in `puyo/beanfinder.py` to
      set the color profile of each color bean.
+
+The histogram output shows line for each sample in the color that the sample is classified as. There is also a thicker line for each color showing average, min and max hue. Background cells are grey, while nuisance are black.
+
+![Hue Histogram](hue_histogram.png)
