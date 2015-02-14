@@ -19,6 +19,9 @@ PLAYER2_NEXT_BEAN_OFFSETS = ((354, 96), (354, 127))
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates/")
 BLACK_EYE_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "black_eye.png")
+BAR_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "scenario_game_won_bar.png")
+GAME_OVER_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "game_over.png")
+CONTINUE_TEMPLATE_FILENAME = os.path.join(TEMPLATE_DIR, "continue_crop.png")
 
 # Average hue histograms for each color, used to match colors.
 # See `vision_training/` for steps to reproduce this data.
@@ -88,12 +91,71 @@ class BeanFinder(object):
         )
 
         self.black_eye_template = cv2.imread(BLACK_EYE_TEMPLATE_FILENAME)
+        self.bar_template = cv2.imread(BAR_TEMPLATE_FILENAME)
+        self.game_over_template = cv2.imread(GAME_OVER_TEMPLATE_FILENAME)
+        self.continue_template = cv2.imread(CONTINUE_TEMPLATE_FILENAME)
 
     def get_board(self, img):
         board = [[self._get_bean_at(img, x, y) for y in range(12)]
                                                for x in range(6)]
         next_beans = self._get_next_beans(img)
         return Board(board, next_beans)
+
+    def get_special_game_state(self, img):
+        if self._is_special_state_scenario_won(img):
+            return "scenario_won"
+        elif self._is_special_state_scenario_lost(img):
+            return "scenario_lost"
+        elif self._is_special_state_scenairo_continue(img):
+            return "scenario_continue"
+        else:
+            return "unknown"
+
+    def _is_special_state_scenario_won(self, img):
+
+        # Crop the top bar of the window that comes up when you win a match in
+        # scenario mode.
+        x_start = 0 + self.board_offset[0]
+        y_start = 30 + self.board_offset[1]
+        x_end = x_start + 192
+        y_end = y_start + 18
+        cropped = img[y_start:y_end, x_start:x_end]
+
+        match_img = cv2.matchTemplate(cropped,
+                                      self.bar_template,
+                                      cv2.TM_CCOEFF_NORMED)
+        max_value = cv2.minMaxLoc(match_img)[1]
+        return max_value > 0.95
+
+    def _is_special_state_scenario_lost(self, img):
+
+        # Crop the "GAME OVER" text
+        x_start = 22 + self.board_offset[0]
+        y_start = 114 + self.board_offset[1]
+        x_end = x_start + 146
+        y_end = y_start + 29
+        cropped = img[y_start:y_end, x_start:x_end]
+
+        match_img = cv2.matchTemplate(cropped,
+                                      self.game_over_template,
+                                      cv2.TM_CCOEFF_NORMED)
+        max_value = cv2.minMaxLoc(match_img)[1]
+        return max_value > 0.95
+
+    def _is_special_state_scenairo_continue(self, img):
+
+        # Crop a section of the robots on the continue screen
+        x_start = 300 + self.board_offset[0]
+        y_start = 200 + self.board_offset[1]
+        x_end = x_start + 200
+        y_end = y_start + 200
+        cropped = img[y_start:y_end, x_start:x_end]
+
+        match_img = cv2.matchTemplate(cropped,
+                                      self.continue_template,
+                                      cv2.TM_CCOEFF_NORMED)
+        max_value = cv2.minMaxLoc(match_img)[1]
+        return max_value > 0.80
 
     def _get_bean_at(self, img, x, y):
         return self._detect_color(self._crop_cell(img, x, y))
