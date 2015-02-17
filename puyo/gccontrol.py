@@ -26,8 +26,27 @@ class Controller(object):
         raise NotImplementedError("This method must be implemented by a "
                                   "subclass.")
 
+    def push_button(self, button):
+        """
+        The meaning of the `button` argument is up to the implementation, but
+        it should be a short string describing the button. Eg. "A", "Left", ...
+        """
+        raise NotImplementedError("This method must be implemented by a "
+                                  "subclass.")
+
 
 class GamecubeController(Controller):
+    BUTTON_BITS = {
+        "start": 0x0,
+        "up": 0x1,
+        "down": 0x2,
+        "a": 0x3,
+        "b": 0x4,
+        "x": 0x5,
+        "y": 0x6,
+        "left": 0x9,
+        "right": 0xA,
+    }
 
     def __init__(self, device):
         """
@@ -55,5 +74,12 @@ class GamecubeController(Controller):
         rot_bits = rot << 1
         down_fast_bits = 0x1 if down_fast else 0x0
 
-        command = pos_bits | rot_bits | down_fast_bits
-        self.gc_dev.write(chr(command))
+        to_send = pos_bits | rot_bits | down_fast_bits
+        self.gc_dev.write(chr(to_send))
+
+    def push_button(self, button):
+        cmd_bits = 0x01 << 6
+        button_bits = self.BUTTON_BITS[button.lower()] << 2
+        rep_bits = 0x00
+        to_send = cmd_bits | button_bits | rep_bits
+        self.gc_dev.write(chr(to_send))

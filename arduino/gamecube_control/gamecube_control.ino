@@ -81,7 +81,19 @@ void loop() {
 /**
  * Adds controller states to the queue based on the command.
  */
+
 static void process_serial_command(unsigned char c, GCStateQueue* queue) {
+    switch((c & 0xC0) >> 6) {
+        case 0x0:
+            process_serial_command_puyo_move(c, queue);
+        break;
+        case 0x1:
+            process_serial_command_single_button(c, queue);
+        break;
+    }
+}
+
+static void process_serial_command_puyo_move(unsigned char c, GCStateQueue* queue) {
     GCState tmp_state = gc_default_state;
 
     int delta_x = ((c & 0x38) >> 3) - 2;  // Amount to move left/right
@@ -130,5 +142,32 @@ static void process_serial_command(unsigned char c, GCStateQueue* queue) {
     // Clear controller one last time
     tmp_state = gc_default_state;
     GCStateQueue_push(queue, &tmp_state, 1);
+
+}
+
+static void process_serial_command_single_button(unsigned char c, GCStateQueue* queue) {
+    GCState new_state = gc_default_state;
+
+    int button = (c & 0x3C) >> 2;
+    int repetitions = (c & 0x03) + 1;
+
+    switch(button) {
+        case 0x0: new_state.data1 |= 0x10; break;  // Start
+        case 0x1: new_state.stick_y = 255;   break;  // Up
+        case 0x2: new_state.stick_y = 0; break;  // Down
+        case 0x3: new_state.data1 |= 0x01; break;  // A
+        case 0x4: new_state.data1 |= 0x02; break;  // B
+        case 0x5: new_state.data1 |= 0x04; break;  // X
+        case 0x6: new_state.data1 |= 0x08; break;  // Y
+        case 0x7: break;  // TODO: Left trigger not implemented
+        case 0x8: break;  // TODO: Left trigger not implemented
+        case 0x9: new_state.stick_x = 0;   break;  // Left
+        case 0xA: new_state.stick_x = 255; break;  // Right
+    }
+
+    for(int i=0; i<repetitions; i++) {
+        GCStateQueue_push(queue, &new_state, 1);
+        GCStateQueue_push(queue, &gc_default_state, 1);
+    }
 
 }
