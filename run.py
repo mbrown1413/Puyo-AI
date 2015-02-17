@@ -50,9 +50,8 @@ def main():
         sys.exit(1)
 
     #TODO: Make screen offset configurable
-    vision = puyo.Vision(player=args.player)
     controller = puyo.GamecubeController(args.gc_dev)
-    driver = puyo.Driver(controller, args.ai, vision)
+    driver = puyo.Driver(controller, args.ai, args.player)
 
     video_writer = None
     cv2.namedWindow("Frame")

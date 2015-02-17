@@ -14,7 +14,7 @@ MIN_NEW_MOVE_WAIT_TIME = 0.3
 # Items:
 #   board: The current board state as a Board object.
 #   new_move: Did a bean just start dropping? True of False
-PlayerState = namedtuple("PlayerState", "board new_move current_beans")
+PlayerState = namedtuple("PlayerState", "board new_move current_beans special_state")
 
 
 class Vision(object):
@@ -124,11 +124,15 @@ class Vision(object):
         else:
             self.frames_since_last_new_move += 1
 
-        return PlayerState(board, new_move, self.current_beans)
+        special_state = "unknown"
+        if self.current_time - self.last_new_move_time > 6:
+            special_state = self.bean_finder.get_special_game_state(img)
+
+        return PlayerState(board, new_move, self.current_beans, special_state)
 
     def _is_new_move(self, old_board, new_board):
 
-        # Ignore boards that are impossible rest.
+        # Ignore boards that are impossible at rest.
         # i.e. when there are blank spaces under a filled cell.
         for x, y in product(range(6), range(1, 12)):
             if not (x == 2 and (y == 11 or y == 10)):

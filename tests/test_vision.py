@@ -18,6 +18,9 @@ class MockBeanFinder(puyo.BeanFinder):
     def get_board(self, board):
         return board
 
+    def get_special_game_state(self, img):
+        return "unknown"
+
 
 class TestVision(PuyoTestCase):
 
