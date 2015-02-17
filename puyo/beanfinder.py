@@ -140,7 +140,7 @@ class BeanFinder(object):
                                       self.game_over_template,
                                       cv2.TM_CCOEFF_NORMED)
         max_value = cv2.minMaxLoc(match_img)[1]
-        return max_value > 0.95
+        return max_value > 0.90
 
     def _is_special_state_scenairo_continue(self, img):
 
