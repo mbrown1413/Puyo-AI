@@ -41,6 +41,8 @@ def main():
         "of the screen.")
     parser.add_argument("--video-out", "-o", default=None,
         help="AVI file to write video to.")
+    parser.add_argument("--debug", "-d", default=False, action="store_true",
+        help="Show debug window and other debug information.")
     args = parser.parse_args()
 
     video = open_video(args.video)
@@ -53,21 +55,25 @@ def main():
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, args.player)
 
+    if args.debug:
+        cv2.namedWindow("Frame")
+        cv2.namedWindow("Grid")
+
     video_writer = None
-    cv2.namedWindow("Frame")
-    cv2.namedWindow("Grid")
     while True:
 
         was_read, img = video.read()
         if not was_read:
             print("Error: Could not read video frame!")
-            if cv2.waitKey(-1) % 256:
-                break
-            continue
-        cv2.imshow("Frame", img)
+            break
+
+        if args.debug:
+            cv2.imshow("Frame", img)
 
         state = driver.step(img)
-        cv2.imshow("Grid", state.board.draw())
+
+        if args.debug:
+            cv2.imshow("Grid", state.board.draw())
 
         if args.video_out:
             if video_writer is None:
@@ -75,9 +81,10 @@ def main():
                 video_writer = cv2.VideoWriter(args.video_out, fourcc, 25, (img.shape[1], img.shape[0]), True)
             video_writer.write(img)
 
-        key = cv2.waitKey(10) % 256
-        if key == 27:  # Escape
-            break
+        if args.debug:
+            key = cv2.waitKey(10) % 256
+            if key == 27:  # Escape
+                break
 
     if video_writer is not None:
         video_writer.release()
