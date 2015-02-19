@@ -187,13 +187,11 @@ class BeanFinder(object):
                 closest_color = color
 
         if closest_color in (b' ', b'k'):
-            # Black and background have very similar colors. Use template
-            # matching on the black bean's eyes to tell the difference.
-            match = cv2.matchTemplate(img,
-                                      self.black_eye_template,
-                                      cv2.TM_CCOEFF)
-            max_value = cv2.minMaxLoc(match)[1]
-            if max_value > 500000:
+            # Nuissance and background have very similar colors. Use value
+            # channel to tell them apart
+            vals = hsv.reshape((-1, 3))[:,2]
+            hist, _ = numpy.histogram(vals, HIST_N_BINS, (0, 1))
+            if hist[6] > 20:
                 return b'k'
             else:
                 return b' '

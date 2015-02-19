@@ -18,4 +18,8 @@ Here is the process:
 
 The histogram output shows line for each sample in the color that the sample is classified as. There is also a thicker line for each color showing average, min and max hue. Background cells are grey, while nuisance are black.
 
+The same process was used to find a value channel difference between background
+and nuissance. Pass "Hue", "Saturation" or "Value" as an argument to
+`histograms.py` to get a plot of different hsv channels.
+
 ![Hue Histogram](hue_histogram.png)
