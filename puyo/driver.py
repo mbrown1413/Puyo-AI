@@ -11,7 +11,7 @@ class Driver(object):
     of Puyo Puyo.
     """
 
-    BUTTON_DELAY = 1
+    BUTTON_DELAY = 0.1
 
     def __init__(self, controller, ai=puyo.DEFAULT_AI_NAME, player=1, vision_cls=puyo.Vision):
         """
@@ -74,15 +74,29 @@ class Driver(object):
             self.button_queue.append("start")
 
         elif state == "scenario_lost":
-            for i in range(3):
-                self.button_queue.append("a")
-            self.button_queue.append("start")
+            self._spell_high_score("BOT")
 
         elif state == "scenario_continue":
             self.button_queue.append("start")
 
         else:
             raise ValueError("Unknown special state")
+
+    def _spell_high_score(self, name):
+        assert len(name) == 3
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
+
+        for letter in name:
+            dist = alphabet.index(letter)
+            direction = "down"
+
+            if len(alphabet) - dist < dist:
+                dist = len(alphabet) - dist
+                direction = "up"
+
+            for i in range(dist):
+                self.button_queue.append(direction)
+            self.button_queue.append("a")
 
     def _handle_button_queue(self):
         t = time()
