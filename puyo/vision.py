@@ -125,7 +125,8 @@ class Vision(object):
             self.frames_since_last_new_move += 1
 
         special_state = "unknown"
-        if self.current_time - self.last_new_move_time > 6:
+        time_since_last_move = self.current_time - self.last_new_move_time
+        if time_since_last_move > 6 and self.frames_since_last_new_move % 10 == 0:
             special_state = self.bean_finder.get_special_game_state(img)
 
         return PlayerState(board, new_move, self.current_beans, special_state)
