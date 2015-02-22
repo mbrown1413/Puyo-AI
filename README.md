@@ -83,16 +83,21 @@ The code for the game control is split between the microcontroller and the pytho
 Status
 ======
 
-This is a work in progress, but it does run end-to-end. Here's the progress of
-each major component:
+Currently it can beat the game, but uses a few continues to make it happen.  AI
+itself needs the most improvement. Here's the status progress of each major
+component:
 
- * Vision Processing - Works decently well, but still has some color recognition bugs.
- * Artificial Intelligence - There are some simple AIs written, but there is a lot more work to do before they are competitive.
- * Game Control - Basic functionality finished.
+ * Vision Processing - Works well including recognizing special game states
+        such as winning or losing a match.
+ * Artificial Intelligence - The best AI right now works well, but makes some
+        stupid decisions that can lead to its own death.
+ * Game Control - Supports the basics: moving puyo pieces and pressing
+        individual buttons.
 
 Milestones:
 
  1. ~~Simple AI controlling the game~~
  1. ~~AI that can beat the early opponents~~
  1. ~~AI that can beat me (I'm not that good)~~
- 1. AI that can beat the final boss, Dr. Robotnik
+ 1. ~~AI that can beat the final boss, Dr. Robotnik~~
+ 1. AI that can beat the final boss without using a continue
