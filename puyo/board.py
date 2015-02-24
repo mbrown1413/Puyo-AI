@@ -48,9 +48,9 @@ libpuyo.board_eliminate_beans.argtypes = [
 ]
 
 
-def _validate_board(board):
-    assert board.shape == (6, 12)
-    for col in board:
+def _validate_board(cells):
+    assert cells.shape == (6, 12)
+    for col in cells:
         for cell in col:
             if cell not in VALID_CELLS:
                 raise ValueError('Invalid cell value "{}"'.format(cell))
@@ -64,7 +64,8 @@ class Board(object):
     like this:
 
         puyo_board = Board()
-        puyo_board.board[x][y]
+        puyo_board[x,y]  # Get cell at (x, y)
+        puyo_board[x,y] = b'r'  # Set (x, y) to red
 
     Each cell is one of the following ASCII characters:
 
@@ -78,37 +79,37 @@ class Board(object):
 
     The usual way for manipulating the board is through the method
     `make_move()`. There are also some lower level methods which allow for
-    moves which could be invalid in an actual game. A typical AI would create a
-    list of moves using `iter_moves()`, and return the move it thinks is best.
+    moves which could be invalid in an actual game, such as directly accessing
+    the cells as described above. A typical AI would create a list of moves
+    using `iter_moves()`, and return the move it thinks is best.
 
     The next beans are also stored, in the attribute `next_beans`. If given,
     it's also shown is the image representation returned by `draw()`.
 
     """
 
-    def __init__(self, board=None, next_beans=None, c_accelerated=True):
+    def __init__(self, cells=None, next_beans=None, c_accelerated=True):
         """
-        If `board` is given, it should be an length 6 array where each item is
+        If `cells` is given, it should be an length 6 array where each item is
         a 12 length array. Create one like this:
 
-            board = [[blah for y in range(12)]
+            cells = [[blah for y in range(12)]
                            for x in range(6)]
 
-        where the lower left is `board[0][0]` and the upper left is
-        `board[0][11]`. The given board will be copied upon initialization, so
+        where the lower left is `cells[0][0]` and the upper left is
+        `cells[0][11]`. The given board will be copied upon initialization, so
         don't worry about mutability.
 
         If `next_beans` is given, it should be a list of 2 bean colors (black,
         or nuisance beans aren't allowed).
 
         """
-        if board is None:
-            #TODO: This should really be a numpy array
-            self.board = numpy.array([[b' ' for y in range(12)]
-                                            for x in range(6)], dtype="|S1")
+        if cells is None:
+            self._cells = numpy.array([[b' ' for y in range(12)]
+                                             for x in range(6)], dtype="|S1")
         else:
-            self.board = numpy.array(board, dtype="|S1")
-            _validate_board(self.board)
+            self._cells = numpy.array(cells, dtype="|S1")
+            _validate_board(self._cells)
 
         if next_beans is not None:
             assert len(next_beans) == 2
@@ -119,12 +120,22 @@ class Board(object):
 
     def __eq__(self, other):
         if isinstance(other, Board):
-            return (self.board == other.board).all() and \
+            return (self._cells == other._cells).all() and \
                     self.next_beans == other.next_beans
         return NotImplemented
 
+    def __getitem__(self, key):
+        return self._cells.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        assert value in VALID_CELLS
+        self._cells.__setitem__(key, value)
+
+    def get_array(self):
+        return self._cells[:]
+
     def copy(self):
-        return Board(self.board, self.next_beans)
+        return Board(self._cells, self.next_beans)
 
     def draw(self):
         """Return an image representing the puyo board."""
@@ -146,7 +157,7 @@ class Board(object):
 
         for x in range(6):
             for y in range(12):
-                cell = self.board[x][y]
+                cell = self._cells[x][y]
                 if cell != b' ':
                     draw_square(x, y, CELL_COLORS[cell])
 
@@ -241,7 +252,7 @@ class Board(object):
         if not self.can_make_move(position, rotation):
             return False
 
-        if position == 2 and rotation == 0 and self.board[2][11] != b' ':
+        if position == 2 and rotation == 0 and self._cells[2][11] != b' ':
             # This column is filled, so it's the only valid move, and results
             # in a game over.
             return Combo(0, 0, 0, True)
@@ -276,12 +287,12 @@ class Board(object):
         else:
             pos_range = range(2, position-1, -1)
         for i in pos_range:
-            if self.board[i][11] != b' ':
+            if self._cells[i][11] != b' ':
                 return False
 
         # Make sure there is room to rotate the beans
-        if rotation != 0 and self.board[1][11] != b' ' and \
-                             self.board[3][11] != b' ':
+        if rotation != 0 and self._cells[1][11] != b' ' and \
+                             self._cells[3][11] != b' ':
             return False
 
         return True
@@ -304,8 +315,8 @@ class Board(object):
                              '"{}".'.format(x))
 
         for y in range(12):
-            if self.board[x][y] == b' ':
-                self.board[x][y] = color
+            if self._cells[x][y] == b' ':
+                self._cells[x][y] = color
                 break
 
     def _eliminate_beans(self):
@@ -319,8 +330,8 @@ class Board(object):
         n_colors_eliminated = ctypes.c_int()
         group_bonus = ctypes.c_int()
         libpuyo.board_eliminate_beans(
-            self.board.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
-            self.board.ctypes.strides_as(ctypes.c_int),
+            self._cells.ctypes.data_as(ctypes.POINTER(ctypes.c_char)),
+            self._cells.ctypes.strides_as(ctypes.c_int),
             ctypes.pointer(n_beans),
             ctypes.pointer(n_colors_eliminated),
             ctypes.pointer(group_bonus)
@@ -332,8 +343,8 @@ class Board(object):
         def eliminate_if_black_bean(x, y):
             if x < 0 or x > 5 or y < 0 or y > 11:
                 return 0
-            if self.board[x][y] == b'k':
-                self.board[x][y] = b' '
+            if self._cells[x][y] == b'k':
+                self._cells[x][y] = b' '
                 return 1
             return 0
 
@@ -342,13 +353,13 @@ class Board(object):
         group_bonus = 0
         for x in range(6):
             for y in range(12):
-                if self.board[x][y] == b' ' or self.board[x][y] == b'k':
+                if self._cells[x][y] == b' ' or self._cells[x][y] == b'k':
                     continue
                 coordinates = self.get_connected(x, y)
                 if len(coordinates) < 4:
                     continue
 
-                colors_eliminated.add(self.board[x][y])
+                colors_eliminated.add(self._cells[x][y])
                 if len(coordinates) >= len(GROUP_BONUS_TABLE):
                     group_bonus += GROUP_BONUS_TABLE[-1]
                 else:
@@ -359,14 +370,14 @@ class Board(object):
                     n_beans += eliminate_if_black_bean(x+1, y)
                     n_beans += eliminate_if_black_bean(x, y-1)
                     n_beans += eliminate_if_black_bean(x, y+1)
-                    self.board[x][y] = b' '
+                    self._cells[x][y] = b' '
                     n_beans += 1
 
         return n_beans, len(colors_eliminated), group_bonus
 
     def get_connected(self, x, y):
         """Return a list of coordinates connected by color to (x, y)."""
-        color = self.board[x][y]
+        color = self._cells[x][y]
         if color == b' ' or color == b'k':
             return []
 
@@ -377,7 +388,7 @@ class Board(object):
                 return
             if x < 0 or x >= 6 or y < 0 or y >= 12:
                 return
-            if self.board[x][y] == color:
+            if self._cells[x][y] == color:
                 visited.add((x, y))
 
                 visit(x-1, y)
@@ -395,10 +406,10 @@ class Board(object):
             lowest_free_y = 0
             for y in range(12):
 
-                if self.board[x][y] != b' ':
+                if self._cells[x][y] != b' ':
 
-                    tmp = self.board[x][lowest_free_y]
-                    self.board[x][lowest_free_y] = self.board[x][y]
-                    self.board[x][y] = tmp
+                    tmp = self._cells[x][lowest_free_y]
+                    self._cells[x][lowest_free_y] = self._cells[x][y]
+                    self._cells[x][y] = tmp
 
                     lowest_free_y += 1

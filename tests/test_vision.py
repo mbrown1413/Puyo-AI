@@ -55,7 +55,7 @@ class TestVision(PuyoTestCase):
 
         # Seeing green should trigger a new move
         board2 = board1.copy()
-        board2.board[2][11] = b'g'
+        board2[2][11] = b'g'
         state = vision.get_state(board2, 5)
         self.assertTrue(state.new_move)
 
@@ -73,8 +73,8 @@ class TestVision(PuyoTestCase):
 
         # Seeing red and green in the correct order should trigger a new move
         board2 = board1.copy()
-        board2.board[2][11] = b'r'
-        board2.board[2][10] = b'g'
+        board2[2][11] = b'r'
+        board2[2][10] = b'g'
         state = vision.get_state(board2, 5)
         self.assertTrue(state.new_move)
 
@@ -92,7 +92,7 @@ class TestVision(PuyoTestCase):
 
         # Yellow bean should not trigger new move
         tmp_board = board.copy()
-        tmp_board.board[2][11] = b'y'
+        tmp_board[2][11] = b'y'
         state = vision.get_state(tmp_board, 5)
         self.assertFalse(state.new_move)
 
@@ -106,8 +106,8 @@ class TestVision(PuyoTestCase):
 
         # (Green, red) should not trigger new move, since red should be on top
         tmp_board = board.copy()
-        tmp_board.board[2][11] = b'g'
-        tmp_board.board[2][10] = b'r'
+        tmp_board[2][11] = b'g'
+        tmp_board[2][10] = b'r'
         state = vision.get_state(tmp_board, 5)
         self.assertFalse(state.new_move)
 
@@ -121,7 +121,7 @@ class TestVision(PuyoTestCase):
 
         # Red should not trigger new move, since green falls first
         tmp_board = board.copy()
-        tmp_board.board[2][11] = b'r'
+        tmp_board[2][11] = b'r'
         state = vision.get_state(tmp_board, 5)
         self.assertFalse(state.new_move)
 
@@ -134,7 +134,7 @@ class TestVision(PuyoTestCase):
         self.assertFalse(state.new_move)
 
         board2 = board1.copy()
-        board2.board[3][11] = b'g'
+        board2[3][11] = b'g'
         state = vision.get_state(board2, 5)
         self.assertFalse(state.new_move)
 

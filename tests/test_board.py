@@ -17,6 +17,23 @@ class TestBoard(PuyoTestCase):
         b.drop_beans(positions, colors)
         return b
 
+    def test_board_mutation(self):
+        board = puyo.Board()
+        self.assertEquals(board[1][1], b' ')
+
+        board[1][1] = b'r'
+        self.assertEquals(board[1][1], b'r')
+        self.assertEquals(board[1, 1], b'r')
+
+        board2 = board.copy()
+
+        board[1,1] = b'g'
+        self.assertEquals(board[1][1], b'g')
+        self.assertEquals(board[1, 1], b'g')
+
+        self.assertEquals(board2[1][1], b'r')
+        self.assertEquals(board2[1, 1], b'r')
+
     def test_can_make_move(self):
         """Many test vectors for `can_make_move` method."""
         # Each test vector is a tuple of:

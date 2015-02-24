@@ -46,7 +46,7 @@ def read_board_recording(filename):
 class PuyoTestCase(unittest.TestCase):
 
     def assertBoardEquals(self, board1, board2):
-        self.assertEquals(board1.board.tolist(), board2.board.tolist())
+        self.assertEquals(board1.get_array().tolist(), board2.get_array().tolist())
         self.assertEquals(board1.next_beans, board2.next_beans)
 
     def assertBoardEmpty(self, board):
