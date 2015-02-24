@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 Recognizes and reconstructs a Puyo 1 board from a video stream.
 """
