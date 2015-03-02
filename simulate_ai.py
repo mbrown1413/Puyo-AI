@@ -77,7 +77,7 @@ def main():
                     print "Invalid Move:", position, rotation
 
                 if random.uniform(0, 1) < args.nuisance_probability:
-                    board.drop_black_bean(random.randint(0, 5))
+                    board.drop_nuisance(1)
 
             if game_over:
                 print "Game Over"

@@ -1,5 +1,6 @@
 
 import os
+import random
 import itertools
 from collections import namedtuple
 
@@ -137,6 +138,18 @@ class Board(object):
     def copy(self):
         return Board(self._cells, self.next_beans)
 
+    def count(self, color=None):
+        """
+        Count cells with the given color. If `color` is None, count all beans
+        (including nuisance).
+        """
+        ret = 0
+        for x, y in itertools.product(range(6), range(12)):
+            value = self._cells[x][y]
+            if value == color or (color is None and value != b' '):
+                ret += 1
+        return ret
+
     def draw(self):
         """Return an image representing the puyo board."""
 
@@ -215,9 +228,21 @@ class Board(object):
         """Shortcut for `drop_beans([x], [color])`."""
         return self.drop_beans([x], [color])
 
-    def drop_black_bean(self, x):
-        """Drop a single black bean from the top."""
-        self._drop(x, b'k')
+    def drop_nuisance(self, n=1):
+        """Drop 'n' nuisance beans."""
+
+        # Distribute as evenly as possible, randomly dropping the last 1-5 if
+        # `n` is not a multiple of 6
+        to_drop_in_col = [n // 6 for x in range(6)]
+        n -= (n // 6) * 6
+        xs = range(6)
+        random.shuffle(xs)
+        for x in xs[:n]:
+            to_drop_in_col[x] += 1
+
+        for x, to_drop in enumerate(to_drop_in_col):
+            for i in range(to_drop):
+                self._drop(x, b'k')
 
     def make_move(self, beans, position, rotation):
         """Drop a pair of beans as a part of a move in the game.

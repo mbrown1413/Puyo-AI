@@ -200,6 +200,34 @@ class TestBoard(PuyoTestCase):
         # different for Puyo 1.
         self.assertEquals(combo.score, 440280)  # This is a puyo puyo (1)
 
+    def test_drop_nuisance_1(self):
+        board = puyo.Board()
+        board.drop_nuisance(1)
+        self.assertEqual(board.count(b'k'), 1)
+
+    def test_drop_nuisance_6(self):
+        board = puyo.Board()
+        board.drop_nuisance(6)
+        self.assertBoardEquals(board, board_from_strs([b'kkkkkk']))
+
+    def test_drop_nuisance_7(self):
+        board = puyo.Board()
+        board.drop_nuisance(7)
+        self.assertEqual(board.count(b'k'), 7)
+        for x in range(6):
+            self.assertEqual(board[x][0], b'k')
+
+    def test_drop_nuisance_36(self):
+        board = puyo.Board()
+        board.drop_nuisance(36)
+        self.assertBoardEquals(board, board_from_strs([b'kkkkkk']*6))
+
+    def test_drop_nuisance_73(self):
+        """Nuisance beans dropped over the top should be ignored."""
+        board = puyo.Board()
+        board.drop_nuisance(73)
+        self.assertBoardEquals(board, board_from_strs([b'kkkkkk']*12))
+
 
 class TestBoardCAccelerated(TestBoard):
     """Test `puyo.Board` with C acceleration."""
