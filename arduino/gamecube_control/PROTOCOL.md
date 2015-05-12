@@ -1,9 +1,3 @@
-<style>
-    table, td, th {
-        text-align: center;
-        border: 1px black solid;
-    }
-</style>
 
 This documents commands sent to the Arduino via Serial.
 
