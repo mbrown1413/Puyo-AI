@@ -3,6 +3,7 @@ import os
 import random
 import itertools
 from collections import namedtuple
+import ctypes
 
 import numpy
 
@@ -37,16 +38,34 @@ GROUP_BONUS_TABLE = (0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 10)
 Combo = namedtuple("Combo", "score n_beans length game_over")
 
 
-import ctypes
-LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
-libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
-libpuyo.board_eliminate_beans.argtypes = [
-    ctypes.POINTER(ctypes.c_char),   # board
-    ctypes.POINTER(ctypes.c_int),  # strides
-    ctypes.POINTER(ctypes.c_int),  # n_beans_out
-    ctypes.POINTER(ctypes.c_int),  # n_colors_eliminated_out
-    ctypes.POINTER(ctypes.c_int),  # group_bonus_out
-]
+libpuyo = None
+ctypes_loaded = False
+ctypes_load_failed = False
+def _load_ctypes():
+    global libpuyo, ctypes_loaded, ctypes_load_failed
+    if ctypes_loaded:
+        return True
+    if ctypes_load_failed:
+        return False
+
+    LIBRARY_FILE = os.path.join(os.path.dirname(__file__), "libpuyo.so")
+    try:
+        libpuyo = ctypes.cdll.LoadLibrary(LIBRARY_FILE)
+    except OSError as e:
+        print e
+        print 'Warning: Error loading C library, processing may be slow.'
+        print '    Use "make" to compile if "puyo/libpuyo.so" is not present.'
+        ctypes_load_failed = True
+        return False
+    libpuyo.board_eliminate_beans.argtypes = [
+        ctypes.POINTER(ctypes.c_char),   # board
+        ctypes.POINTER(ctypes.c_int),  # strides
+        ctypes.POINTER(ctypes.c_int),  # n_beans_out
+        ctypes.POINTER(ctypes.c_int),  # n_colors_eliminated_out
+        ctypes.POINTER(ctypes.c_int),  # group_bonus_out
+    ]
+    ctypes_loaded = True
+    return True
 
 
 def _validate_board(cells):
@@ -117,7 +136,11 @@ class Board(object):
             for bean in next_beans:
                 assert bean in (b'r', b'g', b'b', b'y', b'p')
         self.next_beans = next_beans
+
         self.c_accelerated = c_accelerated
+        if self.c_accelerated:
+            if not _load_ctypes():
+                self.c_accelerated = False
 
     def __eq__(self, other):
         if isinstance(other, Board):
