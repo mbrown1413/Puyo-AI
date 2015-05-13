@@ -390,11 +390,9 @@ class Board(object):
 
         def eliminate_if_black_bean(x, y):
             if x < 0 or x > 5 or y < 0 or y > 11:
-                return 0
+                return
             if self._cells[x][y] == b'k':
                 self._cells[x][y] = b' '
-                return 1
-            return 0
 
         n_beans = 0
         colors_eliminated = set()
@@ -414,10 +412,10 @@ class Board(object):
                     group_bonus += GROUP_BONUS_TABLE[len(coordinates)]
 
                 for x, y in coordinates:
-                    n_beans += eliminate_if_black_bean(x-1, y)
-                    n_beans += eliminate_if_black_bean(x+1, y)
-                    n_beans += eliminate_if_black_bean(x, y-1)
-                    n_beans += eliminate_if_black_bean(x, y+1)
+                    eliminate_if_black_bean(x-1, y)
+                    eliminate_if_black_bean(x+1, y)
+                    eliminate_if_black_bean(x, y-1)
+                    eliminate_if_black_bean(x, y+1)
                     self._cells[x][y] = b' '
                     n_beans += 1
 
