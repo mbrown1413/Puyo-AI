@@ -55,10 +55,12 @@ class GamecubeController(Controller):
                 with the Gamecube. On Linux this might be something like
                 "/dev/ttyACM0" or "/dev/ttyUSB0".
         """
+        self.gc_dev = None
         self.gc_dev = serial.Serial(device, 115200, timeout=0.01)
 
     def __del__(self):
-        self.gc_dev.close()
+        if self.gc_dev:
+            self.gc_dev.close()
 
     def puyo_move(self, pos, rot, down_fast=True):
         rot = rot % 4
