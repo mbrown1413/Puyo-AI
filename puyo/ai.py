@@ -95,7 +95,7 @@ class SimpleGreedyAI(ScoreBasedAI):
                 value += len(board.get_connected(x, y))
 
         # Don't give yourself a game over
-        if board.board[2][11] != b' ':
+        if board[2][11] != b' ':
             value = float("-inf")
 
         return value
@@ -126,14 +126,14 @@ class SimpleComboAI(ScoreBasedAI):
         for x in range(6):
             for y in range(12):
                 value += len(board.get_connected(x, y))
-                if board.board[x][y] != b' ':
+                if board[x][y] != b' ':
                     n_filled += 1
 
-        if n_filled > 36 or board.board[2][9] != b' ':
+        if n_filled > 36 or board[2][9] != b' ':
             value += 4*combo.score
 
         # Don't give yourself a game over
-        if board.board[2][11] != b' ':
+        if board[2][11] != b' ':
             value = float("-inf")
 
         return value
