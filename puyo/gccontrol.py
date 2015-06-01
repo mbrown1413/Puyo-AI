@@ -46,6 +46,7 @@ class GamecubeController(Controller):
         "y": 0x6,
         "left": 0x9,
         "right": 0xA,
+        "z": 0xB,
     }
 
     def __init__(self, device):

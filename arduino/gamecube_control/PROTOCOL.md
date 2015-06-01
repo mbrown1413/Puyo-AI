@@ -113,4 +113,5 @@ Button Values:
     <tr><td>0x8</td><td>Right Trigger</td></td>
     <tr><td>0x9</td><td>Joystick Left</td></td>
     <tr><td>0xA</td><td>Joystick Right</td></td>
+    <tr><td>0xB</td><td>Z</td></td>
 </table>

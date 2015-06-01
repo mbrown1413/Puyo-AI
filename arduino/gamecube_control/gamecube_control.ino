@@ -153,8 +153,8 @@ static void process_serial_command_single_button(unsigned char c, GCStateQueue* 
 
     switch(button) {
         case 0x0: new_state.data1 |= 0x10; break;  // Start
-        case 0x1: new_state.stick_y = 255;   break;  // Up
-        case 0x2: new_state.stick_y = 0; break;  // Down
+        case 0x1: new_state.stick_y = 255; break;  // Up
+        case 0x2: new_state.stick_y = 0;   break;  // Down
         case 0x3: new_state.data1 |= 0x01; break;  // A
         case 0x4: new_state.data1 |= 0x02; break;  // B
         case 0x5: new_state.data1 |= 0x04; break;  // X
@@ -163,6 +163,7 @@ static void process_serial_command_single_button(unsigned char c, GCStateQueue* 
         case 0x8: break;  // TODO: Left trigger not implemented
         case 0x9: new_state.stick_x = 0;   break;  // Left
         case 0xA: new_state.stick_x = 255; break;  // Right
+        case 0xB: new_state.data2 |= 0x10; break;  // Z
     }
 
     for(int i=0; i<repetitions; i++) {
