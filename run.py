@@ -8,21 +8,6 @@ import cv2
 
 import puyo
 
-def open_video(source):
-    video = cv2.VideoCapture(source)
-
-    if not video.isOpened():
-        try:
-            integer = int(source)
-        except ValueError:
-            pass
-        else:
-            video = cv2.VideoCapture(integer)
-
-    if not video.isOpened():
-        return None
-    return video
-
 def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
@@ -45,49 +30,11 @@ def main():
         help="Show debug window and other debug information.")
     args = parser.parse_args()
 
-    video = open_video(args.video)
-    if not video:
-        print("Cannot open video stream")
-        import sys
-        sys.exit(1)
-
     #TODO: Make screen offset configurable
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, args.player)
 
-    if args.debug:
-        cv2.namedWindow("Frame")
-        cv2.namedWindow("Grid")
-
-    video_writer = None
-    while True:
-
-        was_read, img = video.read()
-        if not was_read:
-            print("Error: Could not read video frame!")
-            break
-
-        if args.debug:
-            cv2.imshow("Frame", img)
-
-        state = driver.step(img)
-
-        if args.debug:
-            cv2.imshow("Grid", state.board.draw())
-
-        if args.video_out:
-            if video_writer is None:
-                fourcc = cv2.cv.CV_FOURCC(*"I420")
-                video_writer = cv2.VideoWriter(args.video_out, fourcc, 25, (img.shape[1], img.shape[0]), True)
-            video_writer.write(img)
-
-        if args.debug:
-            key = cv2.waitKey(10) % 256
-            if key == 27:  # Escape
-                break
-
-    if video_writer is not None:
-        video_writer.release()
+    driver.run(args.video, video_out=args.video_out, debug=args.debug)
 
 
 if __name__ == "__main__":

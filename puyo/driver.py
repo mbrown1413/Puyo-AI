@@ -2,8 +2,25 @@
 from time import time
 from collections import deque
 
+import cv2
+
 import puyo
 
+
+def _open_video(source):
+    video = cv2.VideoCapture(source)
+
+    if not video.isOpened():
+        try:
+            integer = int(source)
+        except ValueError:
+            pass
+        else:
+            video = cv2.VideoCapture(integer)
+
+    if not video.isOpened():
+        return None
+    return video
 
 class Driver(object):
     """
@@ -40,8 +57,59 @@ class Driver(object):
         self.button_queue = deque()
         self.last_button_press_time = float("-inf")
 
+    def run(self, video, video_out=None, debug=False):
+        """Play the game using the given video source.
+
+        Args:
+            video: Either an OpenCV video object open with `cv2.VideoCapture`,
+                or a string that can be passed to `cv2.VideoCapture`.
+            video_out: Filename of AVI file to record video.
+            debug: If True then show video and debug windows.
+
+        """
+        if debug:
+            cv2.namedWindow("Frame")
+            cv2.namedWindow("Grid")
+
+        if isinstance(video, (int, basestring)):
+            video_name = video
+            video = _open_video(video)
+            if not video:
+                raise RuntimeError('Could not open video stream "{}"'.format(video_name))
+
+        video_writer = None
+        while True:
+
+            was_read, img = video.read()
+            if not was_read:
+                print("Error: Could not read video frame!")
+                break
+
+            if debug:
+                cv2.imshow("Frame", img)
+
+            state = self.step(img)
+
+            if debug:
+                cv2.imshow("Grid", state.board.draw())
+
+            if video_out:
+                if video_writer is None:
+                    fourcc = cv2.cv.CV_FOURCC(*"I420")
+                    video_writer = cv2.VideoWriter(video_out, fourcc, 25,
+                                            (img.shape[1], img.shape[0]), True)
+                video_writer.write(img)
+
+            if debug:
+                key = cv2.waitKey(10) % 256
+                if key == 27:  # Escape
+                    break
+
+        if video_writer is not None:
+            video_writer.release()
+
     def step(self, img):
-        """Process the given image and take action if nessesary.
+        """Process the given image and take action if necessary.
 
         TODO: Return value?
 
