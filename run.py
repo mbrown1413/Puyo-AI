@@ -74,6 +74,11 @@ def main():
         help="Reset the game and start on the given level by entering a "
              "passcode. Default: start playing immediately. Passcodes are "
              "available for the following levels: {}".format(PASSWORDS.keys()))
+    parser.add_argument("--mode", "-m", default="scenario",
+        choices=("scenario", "repeat"),
+        help="scenario (default): Assume the game is already started in "
+            "scenario and progress accordingly. repeat: Repeatedly do one "
+            "scenario level, specified by --level (-l).")
     parser.add_argument("--debug", "-d", default=False, action="store_true",
         help="Show debug window and other debug information.")
     args = parser.parse_args()
@@ -82,13 +87,26 @@ def main():
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, args.player)
 
-    if args.level:
+    def reset_level():
         if args.level not in PASSWORDS:
             parser.error('Password not available for level "{}"'.format(args.level))
         get_to_password_screen(controller)
         enter_password(controller, args.level)
 
-    driver.run(args.video, video_out=args.video_out, debug=args.debug)
+    if args.level:
+        reset_level()
+
+    if args.mode == "scenario":
+        driver.run(args.video, video_out=args.video_out, debug=args.debug)
+    elif args.mode == "repeat":
+        if not args.level:
+            parser.error("level argument must be given when mode is repeat")
+
+        while True:
+            state = driver.run(args.video, video_out=args.video_out, on_special_state="exit", debug=args.debug)
+            if state.special_state == "unknown":
+                break  # Must have exited manually from debug mode
+            reset_level()
 
 
 if __name__ == "__main__":

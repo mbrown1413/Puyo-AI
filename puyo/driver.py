@@ -57,16 +57,21 @@ class Driver(object):
         self.button_queue = deque()
         self.last_button_press_time = float("-inf")
 
-    def run(self, video, video_out=None, debug=False):
+    def run(self, video, video_out=None, on_special_state=None, debug=False):
         """Play the game using the given video source.
 
         Args:
             video: Either an OpenCV video object open with `cv2.VideoCapture`,
                 or a string that can be passed to `cv2.VideoCapture`.
             video_out: Filename of AVI file to record video.
+            on_special_state: What to do when the game is won or lost. Choices:
+                "exit", None (just keep playing). (Default: None)
             debug: If True then show video and debug windows.
 
         """
+        if on_special_state not in ("exit", None):
+            raise ValueError('Invalid value for "on_special_state" argument')
+
         if debug:
             cv2.namedWindow("Frame")
             cv2.namedWindow("Grid")
@@ -89,6 +94,8 @@ class Driver(object):
                 cv2.imshow("Frame", img)
 
             state = self.step(img)
+            if on_special_state == "exit" and state.special_state != "unknown":
+                return state
 
             if debug:
                 cv2.imshow("Grid", state.board.draw())
@@ -107,6 +114,8 @@ class Driver(object):
 
         if video_writer is not None:
             video_writer.release()
+
+        return state
 
     def step(self, img):
         """Process the given image and take action if necessary.
