@@ -38,7 +38,7 @@ def enter_password(controller, level):
         sleep(0.1)
         cur_idx = token_idx
 
-def get_to_password_screen(controller):
+def reset_to_menu(controller):
     for button in ("z", "up", "a", "up", "a"):
         controller.push_button(button)
         sleep(0.05)
@@ -46,10 +46,19 @@ def get_to_password_screen(controller):
     sleep(4.5); controller.push_button("start")
     sleep(2);   controller.push_button("start")
     sleep(2);   controller.push_button("start")
-    sleep(2);   controller.push_button("a")
-    sleep(1.0); controller.push_button("down")
-    sleep(0.1); controller.push_button("a")
-    sleep(1.5);
+    sleep(2)
+
+def get_to_scenario_mode(controller):
+    reset_to_menu(controller)
+    controller.push_button("a"); sleep(1.0);
+    controller.push_button("a"); sleep(1.0);
+
+def get_to_password_screen(controller):
+    reset_to_menu(controller)
+
+    controller.push_button("a");    sleep(1.0);
+    controller.push_button("down"); sleep(0.1);
+    controller.push_button("a");    sleep(1.5);
 
 
 def main():
@@ -73,7 +82,7 @@ def main():
     parser.add_argument("--level", "-l", default=None, type=int,
         help="Reset the game and start on the given level by entering a "
              "passcode. Default: start playing immediately. Passcodes are "
-             "available for the following levels: {}".format(PASSWORDS.keys()))
+             "available for the following levels: {}".format([1]+PASSWORDS.keys()))
     parser.add_argument("--mode", "-m", default="scenario",
         choices=("scenario", "repeat"),
         help="scenario (default): Assume the game is already started in "
@@ -88,6 +97,9 @@ def main():
     driver = puyo.Driver(controller, args.ai, args.player)
 
     def reset_level():
+        if args.level == 1:
+            get_to_scenario_mode(controller)
+            return
         if args.level not in PASSWORDS:
             parser.error('Password not available for level "{}"'.format(args.level))
         get_to_password_screen(controller)
@@ -106,6 +118,7 @@ def main():
             state = driver.run(args.video, video_out=args.video_out, on_special_state="exit", debug=args.debug)
             if state.special_state == "unknown":
                 break  # Must have exited manually from debug mode
+            print state.special_state
             reset_level()
 
 
