@@ -86,6 +86,18 @@ class Driver(object):
         while True:
 
             was_read, img = video.read()
+
+            #TODO: This is a "temporary" hacky solution for a video delay
+            #      issue. I think the issue happens because of how OpenCV
+            #      captures frames in a circular buffer, returning the next
+            #      frame instead of the most recent one, causing the video to
+            #      lag behind the actual game. This can be fixed by making the
+            #      code a lot faster, but that's not always going to work.
+            #      Getting 3 frames each loop iteration solves the issue, but
+            #      of course skips some frames.
+            was_read, img = video.read()
+            was_read, img = video.read()
+
             if not was_read:
                 print("Error: Could not read video frame!")
                 break
