@@ -11,54 +11,6 @@ import cv2
 import puyo
 
 
-PASSWORD_TOKEN_ORDER = (
-    'r', 'y', 'b', 'p', 'g', 'n',  # Beans
-    'c',  # Carbuncle (little dancing dude)
-    'left', 'right', 'end'  # Controls
-)
-PASSWORDS = {
-    7:  "pbgc",
-    8:  "gcny",
-    9:  "bpcc",
-    10: "cryn",
-    11: "nrrb",
-    12: "ggny",
-}
-def enter_password(controller, level):
-    password = PASSWORDS[level]
-
-    cur_idx = 0
-    for token in tuple(password)+("end",):
-        token_idx = PASSWORD_TOKEN_ORDER.index(token)
-        direction = "left" if cur_idx > token_idx else "right"
-        for i in range(abs(cur_idx - token_idx)):
-            controller.push_button(direction)
-            sleep(0.2)
-        controller.push_button("b")
-        sleep(0.1)
-        cur_idx = token_idx
-
-def reset_to_menu(controller):
-    for button in ("z", "up", "a", "up", "a"):
-        controller.push_button(button)
-        sleep(0.05)
-
-    sleep(4.5); controller.push_button("start")
-    sleep(2);   controller.push_button("start")
-    sleep(2);   controller.push_button("start")
-    sleep(2)
-
-def get_to_scenario_mode(controller):
-    reset_to_menu(controller)
-    controller.push_button("a"); sleep(1.0);
-    controller.push_button("a"); sleep(1.0);
-
-def get_to_password_screen(controller):
-    reset_to_menu(controller)
-
-    controller.push_button("a");    sleep(1.0);
-    controller.push_button("down"); sleep(0.1);
-    controller.push_button("a");    sleep(1.5);
 
 
 def main():
@@ -82,7 +34,7 @@ def main():
     parser.add_argument("--level", "-l", default=None, type=int,
         help="Reset the game and start on the given level by entering a "
              "passcode. Default: start playing immediately. Passcodes are "
-             "available for the following levels: {}".format([1]+PASSWORDS.keys()))
+             "available for the following levels: {}".format(puyo.PASSWORDS.keys()))
     parser.add_argument("--mode", "-m", default="scenario",
         choices=("scenario", "repeat"),
         help="scenario (default): Assume the game is already started in "
@@ -96,17 +48,8 @@ def main():
     controller = puyo.GamecubeController(args.gc_dev)
     driver = puyo.Driver(controller, args.ai, args.player)
 
-    def reset_level():
-        if args.level == 1:
-            get_to_scenario_mode(controller)
-            return
-        if args.level not in PASSWORDS:
-            parser.error('Password not available for level "{}"'.format(args.level))
-        get_to_password_screen(controller)
-        enter_password(controller, args.level)
-
-    if args.level:
-        reset_level()
+    if args.level is not None:
+        driver.reset_to_level(args.level)
 
     if args.mode == "scenario":
         driver.run(args.video, video_out=args.video_out, debug=args.debug)
@@ -114,13 +57,22 @@ def main():
         if not args.level:
             parser.error("level argument must be given when mode is repeat")
 
+        won = 0
+        total = 0
         while True:
             state = driver.run(args.video, video_out=args.video_out, on_special_state="exit", debug=args.debug)
             if state.special_state == "unknown":
                 break  # Must have exited manually from debug mode
-            print state.special_state
-            reset_level()
 
+            if state.special_state == "scenario_won":
+                won += 1
+            total += 1
+            print
+            print "AI: {}".format(args.ai)
+            print "Level: {}".format(args.level)
+            print "Match Result: {} ({} / {})".format(state.special_state, won, total)
+
+            driver.reset_to_level(args.level)
 
 if __name__ == "__main__":
     main()

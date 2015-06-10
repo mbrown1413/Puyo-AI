@@ -5,7 +5,7 @@ from puyo.board import Board
 from puyo.beanfinder import BeanFinder
 from puyo.gccontrol import GamecubeController
 from puyo.vision import Vision
-from puyo.driver import Driver
+from puyo.driver import Driver, PASSWORDS
 from puyo import ai
 
 AI_REGISTRY = {

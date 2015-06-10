@@ -7,6 +7,21 @@ import cv2
 import puyo
 
 
+PASSWORD_TOKEN_ORDER = (
+    'r', 'y', 'b', 'p', 'g', 'n',  # Beans
+    'c',  # Carbuncle (little dancing dude)
+    'left', 'right', 'end'  # Controls
+)
+PASSWORDS = {
+    1:  "", # Handled as a special case
+    7:  "pbgc",
+    8:  "gcny",
+    9:  "bpcc",
+    10: "cryn",
+    11: "nrrb",
+    12: "ggny",
+}
+
 def _open_video(source):
     video = cv2.VideoCapture(source)
 
@@ -22,13 +37,12 @@ def _open_video(source):
         return None
     return video
 
+
 class Driver(object):
     """
     Coordinates between `Controller`, `AI`, and `Vision` classes to play a game
     of Puyo Puyo.
     """
-
-    BUTTON_DELAY = 0.1
 
     def __init__(self, controller, ai=puyo.DEFAULT_AI_NAME, player=1, vision_cls=puyo.Vision):
         """
@@ -55,7 +69,7 @@ class Driver(object):
         self.last_state = None
 
         self.button_queue = deque()
-        self.last_button_press_time = float("-inf")
+        self.button_next_press_time = float("-inf")
 
     def run(self, video, video_out=None, on_special_state=None, debug=False):
         """Play the game using the given video source.
@@ -106,7 +120,7 @@ class Driver(object):
                 cv2.imshow("Frame", img)
 
             state = self.step(img)
-            if on_special_state == "exit" and state.special_state != "unknown":
+            if on_special_state == "exit" and state is not None and state.special_state != "unknown":
                 return state
 
             if debug:
@@ -138,7 +152,7 @@ class Driver(object):
 
         if self.button_queue:
             self._handle_button_queue()
-            return self.last_state
+            return None
         else:
             return self._step_normal(img)
 
@@ -160,18 +174,28 @@ class Driver(object):
     def _handle_special_state(self, state):
 
         if state == "scenario_won":
-            self.button_queue.append("start")
+            self.queue_button_press("start")
 
         elif state == "scenario_lost":
-            self._spell_high_score("BOT")
+            self.spell_high_score("BOT")
 
         elif state == "scenario_continue":
-            self.button_queue.append("start")
+            self.queue_button_press("start")
 
         else:
             raise ValueError("Unknown special state")
 
-    def _spell_high_score(self, name):
+    def queue_button_press(self, button, delay_after=0.1):
+        self.button_queue.append((button, delay_after))
+
+    def _handle_button_queue(self):
+        t = time()
+        if t >= self.button_next_press_time:
+            button, delay_after = self.button_queue.popleft()
+            self.controller.push_button(button)
+            self.button_next_press_time = t + delay_after
+
+    def spell_high_score(self, name):
         assert len(name) == 3
         alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ "
 
@@ -184,15 +208,48 @@ class Driver(object):
                 direction = "up"
 
             for i in range(dist):
-                self.button_queue.append(direction)
-            self.button_queue.append("a")
-
-    def _handle_button_queue(self):
-        t = time()
-        if t - self.last_button_press_time >= self.BUTTON_DELAY:
-            button = self.button_queue.popleft()
-            self.controller.push_button(button)
-            self.last_button_press_time = t
+                self.queue_button_press(direction)
+            self.queue_button_press("a")
 
     def _get_vision_instance(self):
         return self.vision_cls(self.player)
+
+    def reset_to_menu(self):
+        for button in ("z", "up", "a", "up"):
+            self.queue_button_press(button, 0.1)
+        self.queue_button_press("a", 4.55)
+        self.queue_button_press("start", 2)
+        self.queue_button_press("start", 2)
+        self.queue_button_press("start", 2)
+
+    def reset_to_scenario_mode(self):
+        self.reset_to_menu()
+        self.queue_button_press("a", 1)
+        self.queue_button_press("a", 1)
+
+    def reset_to_password_screen(self):
+        self.reset_to_menu()
+        self.queue_button_press("a", 1)
+        self.queue_button_press("down", 0.1)
+        self.queue_button_press("a", 1.5)
+
+    def reset_to_level(self, level):
+        if level == 1:
+            self.reset_to_scenario_mode()
+        elif level in PASSWORDS:
+            self.reset_to_password_screen()
+            self.enter_password(level)
+        else:
+            raise ValueError('Password not available for level "{}"'.format(level))
+
+    def enter_password(self, level):
+        password = PASSWORDS[level]
+
+        cur_idx = 0
+        for token in tuple(password)+("end",):
+            token_idx = PASSWORD_TOKEN_ORDER.index(token)
+            direction = "left" if cur_idx > token_idx else "right"
+            for i in range(abs(cur_idx - token_idx)):
+                self.queue_button_press(direction, 0.2)
+            self.queue_button_press("b")
+            cur_idx = token_idx
