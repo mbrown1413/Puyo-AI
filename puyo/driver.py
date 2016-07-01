@@ -123,7 +123,7 @@ class Driver(object):
             if on_special_state == "exit" and state is not None and state.special_state != "unknown":
                 return state
 
-            if debug:
+            if debug and state:
                 cv2.imshow("Grid", state.board.draw())
 
             if video_out:
