@@ -46,13 +46,13 @@ def main():
 
     #TODO: Make screen offset configurable
     controller = puyo.GamecubeController(args.gc_dev)
-    driver = puyo.Driver(controller, args.ai, args.player)
+    driver = puyo.Driver(controller, args.ai, args.player, debug=args.debug)
 
     if args.level is not None:
         driver.reset_to_level(args.level)
 
     if args.mode == "scenario":
-        driver.run(args.video, video_out=args.video_out, debug=args.debug)
+        driver.run(args.video, video_out=args.video_out)
     elif args.mode == "repeat":
         if not args.level:
             parser.error("level argument must be given when mode is repeat")

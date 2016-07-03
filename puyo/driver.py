@@ -44,7 +44,7 @@ class Driver(object):
     of Puyo Puyo.
     """
 
-    def __init__(self, controller, ai=puyo.DEFAULT_AI_NAME, player=1, vision_cls=puyo.Vision):
+    def __init__(self, controller, ai=puyo.DEFAULT_AI_NAME, player=1, vision_cls=puyo.Vision, debug=False):
         """
         Args:
             controller: Instance of the `Controller` class to use to control
@@ -56,6 +56,7 @@ class Driver(object):
             player: `1` (left player) or `2` (right player).
             vision_cls: Either the `Vision` class or a subclass. Instantiated
                 and used to recognize game state.
+            debug: If True then show video, debug windows, and print info.
         """
         self.controller = controller
         if isinstance(ai, basestring):
@@ -65,13 +66,14 @@ class Driver(object):
         self.player = player
         self.vision_cls = vision_cls
         self.vision = self._get_vision_instance()
+        self.debug = debug
 
         self.last_state = None
 
         self.button_queue = deque()
         self.button_next_press_time = float("-inf")
 
-    def run(self, video, video_out=None, on_special_state=None, debug=False):
+    def run(self, video, video_out=None, on_special_state=None):
         """Play the game using the given video source.
 
         Args:
@@ -80,13 +82,12 @@ class Driver(object):
             video_out: Filename of AVI file to record video.
             on_special_state: What to do when the game is won or lost. Choices:
                 "exit", None (just keep playing). (Default: None)
-            debug: If True then show video and debug windows.
 
         """
         if on_special_state not in ("exit", None):
             raise ValueError('Invalid value for "on_special_state" argument')
 
-        if debug:
+        if self.debug:
             cv2.namedWindow("Frame")
             cv2.namedWindow("Grid")
 
@@ -116,14 +117,14 @@ class Driver(object):
                 print("Error: Could not read video frame!")
                 break
 
-            if debug:
+            if self.debug:
                 cv2.imshow("Frame", img)
 
             state = self.step(img)
             if on_special_state == "exit" and state is not None and state.special_state != "unknown":
                 return state
 
-            if debug and state:
+            if self.debug and state:
                 cv2.imshow("Grid", state.board.draw())
 
             if video_out:
@@ -133,7 +134,7 @@ class Driver(object):
                                             (img.shape[1], img.shape[0]), True)
                 video_writer.write(img)
 
-            if debug:
+            if self.debug:
                 key = cv2.waitKey(10) % 256
                 if key == 27:  # Escape
                     break
@@ -167,6 +168,8 @@ class Driver(object):
         if state.new_move:
             pos, rot = self.ai.get_move(state.board.copy(), state.current_beans)
             self.controller.puyo_move(pos, rot)
+            if self.debug:
+                print "Moving pos={} rot={}".format(pos, rot)
 
         self.last_state = state
         return state
